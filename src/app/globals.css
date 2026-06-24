@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --shear: 11px;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-paper text-ink font-body antialiased;
+    overflow-x: hidden;
+  }
+  ::selection {
+    @apply bg-volt text-white;
+  }
+}
+
+@layer components {
+  .wrap {
+    @apply mx-auto max-w-[1240px] px-5 sm:px-6;
+  }
+
+  .btn {
+    @apply relative inline-flex min-h-[46px] items-center justify-center gap-2 overflow-hidden rounded-md px-6 py-3 font-display text-[15px] font-semibold transition-all duration-200;
+  }
+  .btn-primary {
+    @apply bg-volt text-white shadow-volt-sm hover:-translate-y-0.5 hover:bg-volt-deep hover:shadow-volt;
+  }
+  .btn-primary::after {
+    content: none;
+  }
+  .btn-primary > * {
+    @apply relative z-[1];
+  }
+  .btn-ghost {
+    @apply border border-ink bg-white text-ink hover:-translate-y-0.5 hover:bg-ink hover:text-white hover:shadow-volt-sm;
+  }
+  .btn-ghost-light {
+    @apply border border-white/40 bg-white/[0.04] text-white hover:-translate-y-0.5 hover:border-white hover:bg-white hover:text-ink hover:shadow-volt-sm;
+  }
+
+  .card-shear {
+    @apply overflow-hidden rounded-lg;
+  }
+
+  .grid-texture {
+    background-image: linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+    background-size: 46px 46px;
+  }
+
+  .reveal {
+    @apply opacity-0 translate-y-8 transition-all duration-700;
+    transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .reveal.in {
+    @apply opacity-100 translate-y-0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .reveal {
+    @apply opacity-100 translate-y-0;
+  }
+}

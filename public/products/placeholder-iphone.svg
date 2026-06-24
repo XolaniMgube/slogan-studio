@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E8F4FF"/><stop offset="1" stop-color="#FFFFFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#g)"/>
+  <text x="370" y="300" font-family="Space Grotesk, sans-serif" font-weight="700" font-size="200" fill="#0094FF" fill-opacity="0.05" text-anchor="end">/</text>
+  <text x="200" y="158" font-family="Space Grotesk, sans-serif" font-weight="700" font-size="20" letter-spacing="2" fill="#0094FF" fill-opacity="0.45" text-anchor="middle">IPHONE</text>
+</svg>
