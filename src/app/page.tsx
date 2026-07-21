@@ -1,10 +1,10 @@
 import { Hero } from "@/components/hero";
 import { Featured } from "@/components/featured";
 import { WhySection, PromoSection } from "@/components/sections";
-import { getFeatured } from "@/lib/products";
+import { getFeaturedProducts } from "@/lib/products-db";
 
-export default function HomePage() {
-  const featured = getFeatured();
+export default async function HomePage() {
+  const featured = await getFeaturedProducts();
   return (
     <>
       <Hero />

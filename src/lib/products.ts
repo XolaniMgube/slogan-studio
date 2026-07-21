@@ -19,6 +19,8 @@ export const CATEGORIES: Category[] = [
   "AirPods",
   "Phone Cases",
   "Chargers",
+  "Laptop Skins",
+  "Mouse Pads",
 ];
 
 export const PRODUCTS: Product[] = [

@@ -35,7 +35,7 @@ export function ProductCard({ product }: { product: Product }) {
         <div className="mb-4 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[12.5px] leading-snug text-muted">
           {product.spec}
           <span className="h-[3px] w-[3px] rounded-full bg-muted" />
-          Ship {formatRand(product.shipping)}
+          Free shipping R1000+
         </div>
         <div className="mt-auto flex items-center justify-between">
           <div className="font-display text-xl font-bold">

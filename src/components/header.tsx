@@ -14,6 +14,7 @@ const PAGES: [string, string][] = [
   ["Shop", "/shop"],
   ["Warranty", "/warranty"],
   ["Shipping", "/shipping"],
+  ["Track order", "/track"],
   ["About", "/about"],
   ["Services", "/services"],
 ];

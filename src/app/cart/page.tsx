@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCart, selectSubtotal, SHIPPING_FLAT } from "@/lib/cart-store";
+import { useCart, selectSubtotal, calculateShipping } from "@/lib/cart-store";
 import { formatRand } from "@/lib/utils";
 import { GradeBadge } from "@/components/grade-badge";
 import { PlusIcon, MinusIcon, CloseIcon, ArrowIcon } from "@/components/icons";
@@ -10,7 +10,7 @@ import { PlusIcon, MinusIcon, CloseIcon, ArrowIcon } from "@/components/icons";
 export default function CartPage() {
   const { items, setQty, remove } = useCart();
   const subtotal = useCart(selectSubtotal);
-  const shipping = items.length ? SHIPPING_FLAT : 0;
+  const shipping = calculateShipping(subtotal);
   const total = subtotal + shipping;
 
   if (items.length === 0) {

@@ -1,12 +1,12 @@
 # Slogan Studio — E-commerce
 
-Refurbished electronics store built with **Next.js 15 (App Router)**, **TypeScript**, **Tailwind CSS v3**, **Zustand**, and a **Yoco** payment integration.
+Refurbished electronics store built with **Next.js 15 (App Router)**, **TypeScript**, **Tailwind CSS v3**, **Zustand**, and an **iKhokha** payment integration.
 
 ## Quick start
 
 ```bash
 npm install
-cp .env.local.example .env.local   # optional until Yoco keys exist
+cp .env.local.example .env.local   # optional until iKhokha keys exist
 npm run dev                        # http://localhost:3000
 ```
 
@@ -20,10 +20,11 @@ npm run dev                        # http://localhost:3000
 | `/shop` | Full catalogue with category + condition (grade) filters and sorting |
 | `/product/[slug]` | Product detail, statically generated per product |
 | `/cart` | Full cart page (the slide-in drawer is global) |
-| `/checkout` | Delivery form + order summary → Yoco |
-| `/checkout/success` | Order confirmation |
+| `/checkout` | Delivery form + order summary → iKhokha |
+| `/checkout/success` | Order confirmation, also marks the order paid as a fallback |
 | `/services`, `/about`, `/warranty`, `/shipping`, `/account` | Info pages |
-| `/api/checkout` | Server route that creates the Yoco checkout |
+| `/api/ikhokha/initialize` | Server route that re-prices the cart and opens an iKhokha paylink |
+| `/api/ikhokha/webhook` | Server-to-server callback iKhokha hits to confirm payment |
 
 ## Architecture
 
@@ -35,7 +36,7 @@ src/
     types.ts      domain types (Product, Grade…)
     products.ts   ⭐ MOCK DATA — single source of truth (swap-later)
     cart-store.ts Zustand cart, persisted to localStorage
-    yoco.ts       ⭐ payment module — the ONLY file that talks to Yoco
+    ikhokha.ts    ⭐ payment module — the ONLY file that talks to iKhokha
     utils.ts      price formatting, helpers
 ```
 
@@ -49,26 +50,39 @@ the helpers `async` and fetch) and the rest of the app is untouched.
 Product images are currently SVG placeholders in `public/products/`. Drop real device
 photos in and update the `images` paths in `products.ts`.
 
-### Payments (Yoco)
+### Payments (iKhokha)
 
-All payment logic is isolated in **`src/lib/yoco.ts`**. The app only calls
-`createCheckout()` — it never touches Yoco directly.
+All payment logic is isolated in **`src/lib/ikhokha.ts`**. The app only calls
+`createPaylink()` — it never talks to iKhokha directly.
 
-**Until the client's Yoco merchant account is live**, it runs in **mock mode**: the
-checkout flow works end-to-end and redirects to the success page, but no real money
-moves. To go live, add the keys to `.env.local`:
+There is **no mock/sandbox mode** — iKhokha's iK Pay API only has `mode: "live"`.
+Until `IKHOKHA_APP_ID` / `IKHOKHA_APP_SECRET` are set in `.env.local`,
+`/api/ikhokha/initialize` returns a 503 instead of faking a successful checkout.
+Get both values from the merchant's **IK Dashboard → Integrations → iK Pay API**
+once their account is approved:
 
 ```
-YOCO_SECRET_KEY=sk_live_xxxx
-NEXT_PUBLIC_YOCO_PUBLIC_KEY=pk_live_xxxx
+IKHOKHA_APP_ID=
+IKHOKHA_APP_SECRET=
 NEXT_PUBLIC_SITE_URL=https://sloganstudio.co.za
 ```
 
-The module auto-switches to live mode when `YOCO_SECRET_KEY` is set.
+**Flow:** `/api/ikhokha/initialize` re-prices every cart item from the database
+(never trusts client-submitted prices), creates a `pending` order, opens an
+iKhokha paylink, and redirects the customer to it. iKhokha then confirms payment
+two ways — both must be able to mark the order paid, since either can arrive
+first or the other can be delayed:
 
-> **Note:** full payment testing needs the client's Yoco credentials. A production
-> setup should also add a **webhook** route to confirm payment before fulfilling an
-> order — that's the next step once the merchant account exists.
+- **`/api/ikhokha/webhook`** — server-to-server callback (primary).
+- **`/checkout/success`** — the browser redirect back, which re-checks and
+  marks the order paid as a fallback.
+
+Both go through the same idempotent `markOrderPaidByReference()` in
+`orders-db.ts`, guarded by `payment_status = "pending"` so a race between the
+two can't double-process an order.
+
+> **Local dev:** iKhokha needs a public URL to reach the webhook. Run an ngrok
+> tunnel and point `NEXT_PUBLIC_SITE_URL` at it while testing locally.
 
 ## Design system
 

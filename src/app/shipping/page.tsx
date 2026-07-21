@@ -1,6 +1,6 @@
 import { PageHero } from "@/components/page-hero";
 import { formatRand } from "@/lib/utils";
-import { SHIPPING_FLAT } from "@/lib/cart-store";
+import { SHIPPING_FLAT, FREE_SHIPPING_THRESHOLD } from "@/lib/cart-store";
 
 export default function ShippingPage() {
   return (
@@ -8,7 +8,10 @@ export default function ShippingPage() {
       <PageHero eyebrow="Delivery" title="Shipping & delivery" sub="Fast, tracked delivery nationwide across South Africa." />
       <section className="wrap max-w-3xl py-16">
         <div className="grid gap-6 sm:grid-cols-2">
-          <Info title="Flat-rate delivery" body={`${formatRand(SHIPPING_FLAT)} per order, anywhere in South Africa.`} />
+          <Info
+            title="Delivery cost"
+            body={`${formatRand(SHIPPING_FLAT)} per order under ${formatRand(FREE_SHIPPING_THRESHOLD)} — free shipping on orders of ${formatRand(FREE_SHIPPING_THRESHOLD)} or more.`}
+          />
           <Info title="Delivery time" body="3–5 working days once your order is confirmed and paid." />
           <Info title="Tracking" body="You'll receive a tracking reference as soon as your order ships." />
           <Info title="Collection" body="Local collection available in Vereeniging — message us to arrange." />
@@ -16,7 +19,7 @@ export default function ShippingPage() {
 
         <div className="mt-10 space-y-4 text-[15px] leading-relaxed text-muted">
           <p>
-            Orders are processed once payment is confirmed via our secure Yoco checkout. Devices are carefully packaged to make sure they
+            Orders are processed once payment is confirmed via our secure iKhokha checkout. Devices are carefully packaged to make sure they
             reach you in the same condition they left us.
           </p>
           <p>

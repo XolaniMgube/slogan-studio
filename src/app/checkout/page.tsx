@@ -1,22 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useCart, selectSubtotal, SHIPPING_FLAT } from "@/lib/cart-store";
+import { useSearchParams } from "next/navigation";
+import { useCart, selectSubtotal, calculateShipping } from "@/lib/cart-store";
 import { formatRand } from "@/lib/utils";
 import { GradeBadge } from "@/components/grade-badge";
 import { ArrowIcon } from "@/components/icons";
 
 export default function CheckoutPage() {
-  const { items, clear } = useCart();
+  return (
+    <Suspense>
+      <CheckoutInner />
+    </Suspense>
+  );
+}
+
+function CheckoutInner() {
+  const searchParams = useSearchParams();
+  const payment = searchParams.get("payment");
+
+  const { items } = useCart();
   const subtotal = useCart(selectSubtotal);
-  const shipping = items.length ? SHIPPING_FLAT : 0;
+  const shipping = calculateShipping(subtotal);
   const total = subtotal + shipping;
 
   const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", city: "", postal: "" });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    payment === "cancelled"
+      ? "Payment was cancelled — your cart is still here, so feel free to try again."
+      : payment === "failed"
+        ? "The payment didn't go through. Please check your details and try again."
+        : null
+  );
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [k]: e.target.value });
   const valid = form.name && form.email && form.phone && form.address && form.city && form.postal;
@@ -25,17 +43,16 @@ export default function CheckoutPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/checkout", {
+      const res = await fetch("/api/ikhokha/initialize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: items.map((i) => ({ name: i.name, qty: i.qty, price: i.price })),
-          email: form.email,
+          items: items.map((i) => ({ id: i.id, slug: i.slug, qty: i.qty })),
+          customer: form,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Checkout failed.");
-      clear();
       window.location.href = data.redirectUrl;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -79,7 +96,7 @@ export default function CheckoutPage() {
             <span>{loading ? "Redirecting to payment…" : `Pay ${formatRand(total)}`}</span>
             {!loading && <ArrowIcon className="h-4 w-4 stroke-white" />}
           </button>
-          <p className="mt-3 text-center text-xs text-muted">Secure payment via Yoco. You&apos;ll be redirected to complete your purchase.</p>
+          <p className="mt-3 text-center text-xs text-muted">Secure payment via iKhokha. You&apos;ll be redirected to complete your purchase.</p>
         </div>
 
         {/* summary */}

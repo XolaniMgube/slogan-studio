@@ -19,7 +19,16 @@ export function Footer() {
           </div>
 
           <FootCol title="Shop" links={[["Laptops & MacBooks", "/shop?category=Laptops"], ["iPhones", "/shop?category=iPhones"], ["Accessories", "/shop"], ["All products", "/shop"]]} />
-          <FootCol title="Company" links={[["About us", "/about"], ["Warranty", "/warranty"], ["Shipping", "/shipping"], ["Services", "/services"]]} />
+          <FootCol
+            title="Company"
+            links={[
+              ["About us", "/about"],
+              ["Warranty", "/warranty"],
+              ["Shipping", "/shipping"],
+              ["Track order", "/track"],
+              ["Services", "/services"],
+            ]}
+          />
 
           <div>
             <h5 className="mb-[18px] font-display text-[13px] font-semibold uppercase tracking-[1.5px]">Get in touch</h5>
@@ -40,7 +49,7 @@ export function Footer() {
         <div className="relative z-[2] flex flex-wrap items-center justify-between gap-3 pt-6">
           <p className="text-[13px] text-[#6b7280]">© {new Date().getFullYear()} Slogan Studio. All rights reserved.</p>
           <div className="flex items-center gap-2">
-            {["3-mo warranty", "R150 delivery", "Nationwide"].map((t) => (
+            {["3-mo warranty", "Free shipping R1000+", "Nationwide"].map((t) => (
               <span key={t} className="rounded-sm border border-[#26262f] px-2.5 py-[5px] font-display text-[11px] font-medium text-[#8a93a3]">
                 {t}
               </span>

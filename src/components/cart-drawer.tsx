@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCart, selectSubtotal, SHIPPING_FLAT } from "@/lib/cart-store";
+import { useCart, selectSubtotal, calculateShipping } from "@/lib/cart-store";
 import { formatRand } from "@/lib/utils";
 import { CloseIcon, PlusIcon, MinusIcon, ArrowIcon, CartIcon } from "./icons";
 import { GradeBadge } from "./grade-badge";
@@ -10,7 +10,7 @@ import { GradeBadge } from "./grade-badge";
 export function CartDrawer() {
   const { items, isOpen, close, setQty, remove } = useCart();
   const subtotal = useCart(selectSubtotal);
-  const shipping = items.length ? SHIPPING_FLAT : 0;
+  const shipping = calculateShipping(subtotal);
   const total = subtotal + shipping;
 
   return (

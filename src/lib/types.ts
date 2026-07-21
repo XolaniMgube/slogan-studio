@@ -9,7 +9,9 @@ export type Category =
   | "Mice"
   | "AirPods"
   | "Phone Cases"
-  | "Chargers";
+  | "Chargers"
+  | "Laptop Skins"
+  | "Mouse Pads";
 
 export interface Product {
   id: string;

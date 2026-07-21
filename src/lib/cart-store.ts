@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { Product } from "./types";
+import { SHIPPING_FLAT, FREE_SHIPPING_THRESHOLD, calculateShipping } from "./shop-config";
 
 export interface CartItem {
   id: string;
@@ -27,7 +28,7 @@ interface CartState {
   toggle: () => void;
 }
 
-export const SHIPPING_FLAT = 150;
+export { SHIPPING_FLAT, FREE_SHIPPING_THRESHOLD, calculateShipping };
 
 export const useCart = create<CartState>()(
   persist(

@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getAllProducts, getBySlug, getRelated } from "@/lib/products";
+import { getAllProducts } from "@/lib/products";
+import { getProductBySlug, getRelatedProducts } from "@/lib/products-db";
 import { GRADE_LABEL, GRADE_BLURB } from "@/lib/types";
 import { formatRand } from "@/lib/utils";
 import { GradeBadge } from "@/components/grade-badge";
@@ -15,10 +16,10 @@ export function generateStaticParams() {
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = getBySlug(slug);
+  const product = await getProductBySlug(slug);
   if (!product) notFound();
 
-  const related = getRelated(product);
+  const related = await getRelatedProducts(product);
   const saving = product.compareAt ? product.compareAt - product.price : 0;
 
   return (
@@ -37,7 +38,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         {/* image */}
         <div className="relative aspect-square overflow-hidden border border-hairline bg-gradient-to-br from-mist to-white">
           <GradeBadge grade={product.grade} className="absolute left-4 top-4 z-[3]" />
-          <Image src={product.images[0]} alt={product.name} fill sizes="(max-width:768px) 100vw, 50vw" className="object-cover" priority />
+          <Image src={product.images[0]} alt={product.name} fill sizes="(max-width:768px) 100vw, 50vw" className="object-contain p-6" priority />
           <span className="pointer-events-none absolute -bottom-10 -right-8 font-display text-[260px] font-bold leading-none text-volt/[0.05]">/</span>
         </div>
 
@@ -83,8 +84,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
           <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 border-t border-hairline pt-5 text-[13px] text-muted">
             <span>✓ 3-month warranty</span>
-            <span>✓ {formatRand(product.shipping)} nationwide delivery</span>
-            <span>✓ Secure Yoco checkout</span>
+            <span>✓ Free shipping on orders over R1000</span>
+            <span>✓ Secure iKhokha checkout</span>
           </div>
         </div>
       </div>
