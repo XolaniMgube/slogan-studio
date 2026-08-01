@@ -1,13 +1,14 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useCallback, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useCart, selectSubtotal, calculateShipping } from "@/lib/cart-store";
-import { formatRand } from "@/lib/utils";
+import { cn, formatRand } from "@/lib/utils";
 import { GradeBadge } from "@/components/grade-badge";
 import { ArrowIcon } from "@/components/icons";
+import { AddressAutocomplete, ResolvedAddress, isAddressAutocompleteEnabled } from "@/components/address-autocomplete";
 
 export default function CheckoutPage() {
   return (
@@ -26,8 +27,34 @@ function CheckoutInner() {
   const shipping = calculateShipping(subtotal);
   const total = subtotal + shipping;
 
-  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", city: "", postal: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", address2: "", city: "", province: "", postal: "" });
   const [loading, setLoading] = useState(false);
+
+  /* Which fields Google actually populated — only those lock, so a missing
+     postal code can never leave a customer stuck with an empty disabled field. */
+  const [verified, setVerified] = useState<Set<"city" | "province" | "postal">>(new Set());
+  const [manualEntry, setManualEntry] = useState(!isAddressAutocompleteEnabled);
+
+  const handleResolved = useCallback((address: ResolvedAddress) => {
+    setForm((prev) => ({
+      ...prev,
+      address: address.line1 || prev.address,
+      city: address.city,
+      province: address.province,
+      postal: address.postal,
+    }));
+
+    const filled = new Set<"city" | "province" | "postal">();
+    if (address.city) filled.add("city");
+    if (address.province) filled.add("province");
+    if (address.postal) filled.add("postal");
+    setVerified(filled);
+  }, []);
+
+  // If the Maps script fails to load, silently fall back to manual entry.
+  const handleAutocompleteError = useCallback(() => setManualEntry(true), []);
+
+  const locked = (field: "city" | "province" | "postal") => !manualEntry && verified.has(field);
   const [error, setError] = useState<string | null>(
     payment === "cancelled"
       ? "Payment was cancelled — your cart is still here, so feel free to try again."
@@ -85,9 +112,40 @@ function CheckoutInner() {
             <Field label="Full name" value={form.name} onChange={set("name")} className="sm:col-span-2" />
             <Field label="Email" type="email" value={form.email} onChange={set("email")} />
             <Field label="Phone" type="tel" value={form.phone} onChange={set("phone")} />
-            <Field label="Street address" value={form.address} onChange={set("address")} className="sm:col-span-2" />
-            <Field label="City / Town" value={form.city} onChange={set("city")} />
-            <Field label="Postal code" value={form.postal} onChange={set("postal")} />
+
+            <div className="sm:col-span-2">
+              {isAddressAutocompleteEnabled && !manualEntry ? (
+                <label className="flex flex-col gap-1.5">
+                  <span className="font-display text-[13px] font-medium">Street address</span>
+                  <AddressAutocomplete onResolved={handleResolved} onError={handleAutocompleteError} />
+                  {form.address && <span className="text-xs text-muted">Selected: {form.address}</span>}
+                </label>
+              ) : (
+                <Field label="Street address" value={form.address} onChange={set("address")} />
+              )}
+
+              {isAddressAutocompleteEnabled && (
+                <button
+                  type="button"
+                  onClick={() => setManualEntry((v) => !v)}
+                  className="mt-1.5 text-xs font-semibold text-volt underline-offset-2 hover:underline"
+                >
+                  {manualEntry ? "Search for my address instead" : "My address isn't listed — enter it manually"}
+                </button>
+              )}
+            </div>
+
+            <Field
+              label="Unit / Complex / Building (optional)"
+              value={form.address2}
+              onChange={set("address2")}
+              className="sm:col-span-2"
+              placeholder="e.g. Unit 12B, Sandton Gate"
+            />
+
+            <Field label="City / Town" value={form.city} onChange={set("city")} readOnly={locked("city")} />
+            <Field label="Province" value={form.province} onChange={set("province")} readOnly={locked("province")} />
+            <Field label="Postal code" value={form.postal} onChange={set("postal")} readOnly={locked("postal")} className="sm:col-span-2" />
           </div>
 
           {error && <p className="mt-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
@@ -137,12 +195,25 @@ function CheckoutInner() {
 function Field({
   label,
   className,
+  readOnly,
   ...props
 }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <label className={`flex flex-col gap-1.5 ${className ?? ""}`}>
-      <span className="font-display text-[13px] font-medium">{label}</span>
-      <input {...props} className="border border-hairline bg-white px-3.5 py-2.5 text-sm outline-none transition focus:border-volt focus:shadow-[0_0_0_3px_rgba(0,148,255,.15)]" />
+      <span className="font-display text-[13px] font-medium">
+        {label}
+        {readOnly && <span className="ml-1.5 text-[11px] font-normal text-grade-a">✓ verified</span>}
+      </span>
+      <input
+        {...props}
+        readOnly={readOnly}
+        className={cn(
+          "border border-hairline px-3.5 py-2.5 text-sm outline-none transition",
+          readOnly
+            ? "cursor-default bg-paper-2 text-muted"
+            : "bg-white focus:border-volt focus:shadow-[0_0_0_3px_rgba(0,148,255,.15)]"
+        )}
+      />
     </label>
   );
 }

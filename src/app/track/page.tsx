@@ -26,7 +26,7 @@ export default function TrackOrderPage() {
         <form action={formAction} className="grid gap-4">
           <label className="grid gap-1.5">
             <span className="font-display text-sm font-semibold">Order number</span>
-            <input name="orderNumber" placeholder="SS-XXXXXXX" required className="input" />
+            <input name="orderNumber" placeholder="SS-XXXXXXXXXX" required className="input" />
           </label>
           <label className="grid gap-1.5">
             <span className="font-display text-sm font-semibold">Email</span>

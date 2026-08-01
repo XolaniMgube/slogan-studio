@@ -84,6 +84,39 @@ two can't double-process an order.
 > **Local dev:** iKhokha needs a public URL to reach the webhook. Run an ngrok
 > tunnel and point `NEXT_PUBLIC_SITE_URL` at it while testing locally.
 
+### Address autocomplete (Google Places)
+
+Checkout can verify delivery addresses via Google Places, so orders aren't
+shipped to addresses that don't exist. It's **optional** — with no key set,
+checkout falls back to plain manual entry and nothing breaks.
+
+Setup:
+
+1. Create a Google Cloud project and **enable billing**.
+2. Enable **Places API (New)**.
+3. Create an API key and **restrict it by HTTP referrer** to the store's
+   domain. This key ships to the browser by necessity — an unrestricted key can
+   be copied from page source and billed to the merchant.
+4. Add it to `.env.local` / Vercel:
+
+```
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
+```
+
+Implementation notes:
+
+- Uses `PlaceAutocompleteElement` — the older `google.maps.places.Autocomplete`
+  widget is deprecated. The element manages its own session tokens, which keeps
+  usage in the free Autocomplete session tier.
+- Results are restricted to South Africa (`includedRegionCodes: ["za"]`).
+- **Only fields Google actually returns are locked.** If Google has no postal
+  code for an address, that field stays editable rather than trapping the
+  customer with an empty disabled input. There's also an "enter it manually"
+  toggle for addresses Google doesn't know — important for townships, new
+  developments and farm addresses.
+- Unit/complex/building is a separate always-editable field
+  (`shipping_address_line2`), since Google's formatted address never includes it.
+
 ## Design system
 
 Tokens live in `tailwind.config.ts`: **Volt Blue `#0094FF`** primary, near-black

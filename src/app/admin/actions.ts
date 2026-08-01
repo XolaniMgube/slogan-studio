@@ -2,10 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { clearAdminSession, createAdminSession, verifyPassword } from "@/lib/admin-auth";
+import { clearAdminSession, createAdminSession, requireAdmin, verifyPassword } from "@/lib/admin-auth";
 import { createSupabaseAdminClient, isSupabaseAdminConfigured } from "@/lib/supabase/server";
 import { OrderStatus, PaymentStatus, ProductGrade, ProductStatus } from "@/lib/database.types";
 import { seedProductsIfEmpty } from "@/lib/products-db";
+import { restoreOrderStock } from "@/lib/orders-db";
 import { getImageFiles, uploadProductImages } from "@/lib/product-images";
 
 export async function loginAdmin(_: { error?: string } | undefined, formData: FormData) {
@@ -22,6 +23,8 @@ export async function logoutAdmin() {
 }
 
 export async function seedProductsAction() {
+  await requireAdmin();
+
   await seedProductsIfEmpty();
   revalidatePath("/");
   revalidatePath("/shop");
@@ -29,6 +32,8 @@ export async function seedProductsAction() {
 }
 
 export async function saveProductAction(formData: FormData) {
+  // Must run before anything else — the image upload below writes to storage.
+  await requireAdmin();
   if (!isSupabaseAdminConfigured()) throw new Error("Supabase admin credentials are not configured.");
 
   const id = String(formData.get("id") ?? "");
@@ -81,6 +86,7 @@ export async function saveProductAction(formData: FormData) {
 }
 
 export async function updateOrderStatusAction(formData: FormData) {
+  await requireAdmin();
   if (!isSupabaseAdminConfigured()) throw new Error("Supabase admin credentials are not configured.");
 
   const id = String(formData.get("id") ?? "");
@@ -99,6 +105,17 @@ export async function updateOrderStatusAction(formData: FormData) {
     .eq("id", id);
 
   if (error) throw new Error(error.message);
+
+  // Put stock back when an order is called off. restore_order_stock is a no-op
+  // unless this order's stock was actually decremented, and clears that flag, so
+  // toggling between cancelled/refunded can't hand back the same units twice.
+  if (status === "cancelled" || status === "refunded") {
+    await restoreOrderStock(id);
+    revalidatePath("/");
+    revalidatePath("/shop");
+    revalidatePath("/admin/products");
+  }
+
   revalidatePath("/admin/orders");
 }
 

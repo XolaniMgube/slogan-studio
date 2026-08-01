@@ -1,17 +1,30 @@
 import Link from "next/link";
 import { CheckIcon, ArrowIcon } from "@/components/icons";
 import { markOrderPaidByReference } from "@/lib/orders-db";
+import { verifyConfirmationToken } from "@/lib/ikhokha";
 import { ClearCartOnSuccess } from "../clear-cart";
 
-export default async function SuccessPage({ searchParams }: { searchParams: Promise<{ ref?: string }> }) {
-  const { ref } = await searchParams;
+export default async function SuccessPage({ searchParams }: { searchParams: Promise<{ ref?: string; t?: string }> }) {
+  const { ref, t } = await searchParams;
 
-  // Fallback in case iKhokha's webhook hasn't landed yet by the time the customer is redirected back.
+  // Fallback in case iKhokha's webhook hasn't landed yet by the time the
+  // customer is redirected back.
+  //
+  // The token is mandatory. The order reference is handed to the browser when
+  // checkout starts, so without this anyone could visit this page with their own
+  // unpaid reference and have it marked paid. Only iKhokha's redirect carries a
+  // valid token, and it only redirects after payment actually succeeds.
   if (ref) {
-    try {
-      await markOrderPaidByReference(ref);
-    } catch (err) {
-      console.error("Failed to confirm payment on success page:", err instanceof Error ? err.message : err);
+    if (verifyConfirmationToken(ref, t)) {
+      try {
+        await markOrderPaidByReference(ref);
+      } catch (err) {
+        console.error("Failed to confirm payment on success page:", err instanceof Error ? err.message : err);
+      }
+    } else {
+      // Not fatal for the customer — the webhook is the primary path and will
+      // settle the order regardless. We just refuse to settle it from here.
+      console.error(`[checkout/success] Refusing to settle ${ref}: missing or invalid confirmation token.`);
     }
   }
 

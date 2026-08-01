@@ -1,5 +1,6 @@
 import "server-only";
 
+import { randomBytes } from "crypto";
 import { calculateShipping } from "./shop-config";
 import { OrderRow, OrderStatus, PaymentStatus, ProductGrade } from "./database.types";
 import { createSupabaseAdminClient, isSupabaseAdminConfigured } from "./supabase/server";
@@ -37,8 +38,20 @@ export interface CheckoutCustomer {
   postal: string;
 }
 
+/** Unambiguous characters only — customers read these off a screen and type them into /track. */
+const ORDER_NUMBER_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+
+/**
+ * Order numbers must be unguessable, not just unique: they're half of the
+ * authorization for customer order tracking, and they're handed to the browser
+ * at checkout. The previous `Date.now().toString(36)` was a plain timestamp —
+ * trivially enumerable, so anyone could walk the sequence and probe orders.
+ */
 export function createOrderNumber() {
-  return `SS-${Date.now().toString(36).toUpperCase()}`;
+  const bytes = randomBytes(10);
+  let out = "";
+  for (const byte of bytes) out += ORDER_NUMBER_ALPHABET[byte % ORDER_NUMBER_ALPHABET.length];
+  return `SS-${out}`;
 }
 
 export async function createPendingOrder(input: {
@@ -109,7 +122,21 @@ export async function createPendingOrder(input: {
     }))
   );
 
-  if (itemsError) throw new Error(itemsError.message);
+  if (itemsError) {
+    // Compensating delete. The orders row is already committed at this point, so
+    // without this we'd leave a pending order with zero line items — and
+    // mark_order_paid() iterates order_items to decrement stock, so such an order
+    // would later be marked paid while moving no inventory at all. order_items
+    // cascades from orders, so removing the parent is enough.
+    const { error: rollbackError } = await supabase.from("orders").delete().eq("id", order.id);
+    if (rollbackError) {
+      console.error(
+        `[ORDER] Could not roll back order ${order.id} (${input.paymentReference}) after its line items failed to save: ` +
+          `${rollbackError.message}. This order has no items and must not be fulfilled — resolve it manually.`
+      );
+    }
+    throw new Error(itemsError.message);
+  }
 
   return {
     id: order.id,
@@ -121,26 +148,83 @@ export async function createPendingOrder(input: {
   };
 }
 
+export interface StockShortfall {
+  productId: string;
+  name: string;
+  wanted: number;
+}
+
+interface MarkOrderPaidResult {
+  found: boolean;
+  updated: boolean;
+  orderId?: string;
+  shortfalls: StockShortfall[];
+}
+
 /**
- * Marks an order paid by its payment reference. Guarded by payment_status =
- * "pending" so it's safe to call from both the iKhokha webhook and the
- * checkout success-page fallback without double-processing a race between
- * the two.
+ * Marks an order paid and decrements stock atomically, via the `mark_order_paid`
+ * Postgres function (see supabase/migrations/20260731000000_stock_decrement.sql).
+ *
+ * Safe to call from both the iKhokha webhook and the checkout success-page
+ * fallback — the function locks the order row and only acts while
+ * payment_status is still "pending", so whichever arrives second is a no-op.
+ *
+ * `shortfalls` is non-empty when the customer paid for stock we no longer had.
+ * The order is still marked paid (their money was taken) — it needs manual
+ * resolution, so it's logged loudly here.
  */
-export async function markOrderPaidByReference(reference: string): Promise<{ updated: boolean }> {
-  if (!isSupabaseAdminConfigured()) return { updated: false };
+export async function markOrderPaidByReference(reference: string): Promise<{ updated: boolean; shortfalls: StockShortfall[] }> {
+  if (!isSupabaseAdminConfigured()) return { updated: false, shortfalls: [] };
 
   const supabase = createSupabaseAdminClient();
-  const now = new Date().toISOString();
-  const { data, error } = await supabase
-    .from("orders")
-    .update({ status: "paid", payment_status: "paid", paid_at: now })
-    .eq("payment_reference", reference)
-    .eq("payment_status", "pending")
-    .select("id");
+  const { data, error } = await supabase.rpc("mark_order_paid", { p_reference: reference });
 
   if (error) throw new Error(error.message);
-  return { updated: Boolean(data?.length) };
+
+  const result = (data ?? { found: false, updated: false, shortfalls: [] }) as MarkOrderPaidResult;
+  const shortfalls = result.shortfalls ?? [];
+
+  if (shortfalls.length) {
+    console.error(
+      `[STOCK] Order ${reference} was paid but stock was insufficient for: ` +
+        shortfalls.map((s) => `${s.name} (wanted ${s.wanted})`).join(", ") +
+        " — needs manual resolution (refund or source another unit)."
+    );
+  }
+
+  return { updated: result.updated, shortfalls };
+}
+
+export interface RestoredStockItem {
+  productId: string;
+  name: string;
+  quantity: number;
+}
+
+/**
+ * Puts an order's stock back when it's cancelled or refunded, via the
+ * `restore_order_stock` Postgres function.
+ *
+ * Only acts on orders whose stock was cleanly decremented in the first place
+ * (tracked by orders.stock_decremented), and clears that flag on the way out —
+ * so repeated cancel/refund edits in the back office can't inflate inventory.
+ */
+export async function restoreOrderStock(orderId: string): Promise<{ restored: boolean; items: RestoredStockItem[] }> {
+  if (!isSupabaseAdminConfigured()) return { restored: false, items: [] };
+
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase.rpc("restore_order_stock", { p_order_id: orderId });
+
+  if (error) throw new Error(error.message);
+
+  const result = (data ?? { restored: false, items: [] }) as { restored: boolean; items?: RestoredStockItem[] };
+  const items = result.items ?? [];
+
+  if (result.restored && items.length) {
+    console.log(`[STOCK] Restored for order ${orderId}: ` + items.map((i) => `${i.name} ×${i.quantity}`).join(", "));
+  }
+
+  return { restored: result.restored, items };
 }
 
 function isUuid(value: string) {
@@ -162,6 +246,11 @@ export interface TrackedOrder {
  * service role can read it), so this runs through the admin client but
  * enforces its own authorization by requiring an exact order number + email
  * match — never look up an order by number alone.
+ *
+ * The email is compared in application code, NOT via a SQL `ilike`. `ilike`
+ * treats `%` and `_` in the supplied value as wildcards, so an attacker could
+ * pass `%` and match any email for a given order number — bypassing the check
+ * entirely.
  */
 export async function getOrderForTracking(orderNumber: string, email: string): Promise<TrackedOrder | null> {
   if (!isSupabaseAdminConfigured()) return null;
@@ -169,13 +258,18 @@ export async function getOrderForTracking(orderNumber: string, email: string): P
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("orders")
-    .select("order_number, status, payment_status, placed_at, paid_at, fulfilled_at, shipping_city")
+    .select("order_number, status, payment_status, placed_at, paid_at, fulfilled_at, shipping_city, customer_email")
     .eq("order_number", orderNumber.trim().toUpperCase())
-    .ilike("customer_email", email.trim())
     .maybeSingle();
 
   if (error) throw new Error(error.message);
-  return data;
+  if (!data) return null;
+
+  if (data.customer_email.trim().toLowerCase() !== email.trim().toLowerCase()) return null;
+
+  // Don't hand the stored email back to the caller — they had to know it already.
+  const { customer_email: _email, ...tracked } = data;
+  return tracked;
 }
 
 export async function getAdminOrders(): Promise<AdminOrder[]> {

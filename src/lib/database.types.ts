@@ -108,6 +108,8 @@ export interface OrderRow {
   discount_cents: number;
   total_cents: number;
   ikhokha_checkout_id: string | null;
+  /** True once mark_order_paid has cleanly removed this order's stock. Drives restore-on-cancel. */
+  stock_decremented: boolean;
   payment_reference: string | null;
   notes: string | null;
   placed_at: string;

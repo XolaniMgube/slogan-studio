@@ -40,6 +40,14 @@ export async function POST(req: NextRequest) {
       body.items.map(async (item) => {
         const product = await getProductBySlug(item.slug);
         if (!product || product.id !== item.id) throw new Error(`"${item.slug}" is no longer available.`);
+
+        // Fail before taking payment. This is a best-effort check — stock can still
+        // sell out between here and confirmation, which mark_order_paid catches
+        // atomically and reports as a shortfall.
+        const qty = Math.max(1, Math.round(item.qty));
+        if (product.stock <= 0) throw new Error(`${product.name} is sold out.`);
+        if (product.stock < qty) throw new Error(`Only ${product.stock} left of ${product.name} — please reduce the quantity.`);
+
         return {
           id: product.id,
           slug: product.slug,
@@ -47,7 +55,7 @@ export async function POST(req: NextRequest) {
           price: product.price,
           grade: product.grade,
           image: product.images[0],
-          qty: Math.max(1, Math.round(item.qty)),
+          qty,
         };
       })
     );

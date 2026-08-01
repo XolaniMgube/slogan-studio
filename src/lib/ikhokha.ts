@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 
 /**
  * IKHOKHA PAYMENT MODULE (server-only)
@@ -39,6 +39,32 @@ export function isIkhokhaConfigured(): boolean {
   return Boolean(IKHOKHA_APP_ID?.trim() && IKHOKHA_APP_SECRET?.trim());
 }
 
+/**
+ * Proof that a payment-confirmation callback really came back through iKhokha.
+ *
+ * Both the webhook URL and the success-page URL are built by US and handed to
+ * iKhokha, so we can embed a token derived from our server secret. iKhokha
+ * echoes it back on both paths.
+ *
+ * This matters because the order `reference` is returned to the browser when
+ * checkout starts. Without a token, anyone could take their own reference and
+ * hit the success page (or the webhook) to mark an unpaid order as paid, and
+ * walk away with the goods. The token can only be obtained by actually
+ * completing payment and being redirected/called back by iKhokha.
+ */
+export function createConfirmationToken(reference: string): string {
+  if (!IKHOKHA_APP_SECRET) throw new Error("Missing IKHOKHA_APP_SECRET.");
+  return createHmac("sha256", IKHOKHA_APP_SECRET).update(`order-confirm:${reference}`).digest("hex");
+}
+
+export function verifyConfirmationToken(reference: string, token: string | null | undefined): boolean {
+  if (!token || !IKHOKHA_APP_SECRET) return false;
+
+  const provided = Buffer.from(token);
+  const expected = Buffer.from(createConfirmationToken(reference));
+  return provided.length === expected.length && timingSafeEqual(provided, expected);
+}
+
 const NUL_BYTE = String.fromCharCode(0);
 
 /** Matches iKhokha's own Go/Node examples byte-for-byte — do not "simplify" to JSON.stringify escaping. */
@@ -58,6 +84,8 @@ export async function createPaylink(input: CreatePaylinkInput): Promise<PaylinkR
   }
 
   const amountCents = Math.round(input.amount * 100);
+  const token = createConfirmationToken(input.reference);
+  const ref = encodeURIComponent(input.reference);
 
   const requestBody = {
     entityID: IKHOKHA_APP_ID,
@@ -68,8 +96,8 @@ export async function createPaylink(input: CreatePaylinkInput): Promise<PaylinkR
     mode: "live",
     externalTransactionID: input.reference,
     urls: {
-      callbackUrl: `${SITE_URL}/api/ikhokha/webhook?reference=${encodeURIComponent(input.reference)}`,
-      successPageUrl: `${SITE_URL}/checkout/success?ref=${encodeURIComponent(input.reference)}`,
+      callbackUrl: `${SITE_URL}/api/ikhokha/webhook?reference=${ref}&t=${token}`,
+      successPageUrl: `${SITE_URL}/checkout/success?ref=${ref}&t=${token}`,
       failurePageUrl: `${SITE_URL}/checkout?payment=failed`,
       cancelUrl: `${SITE_URL}/checkout?payment=cancelled`,
     },

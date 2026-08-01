@@ -5,6 +5,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 const COOKIE_NAME = "slogan_admin";
+/** Scopes the session cookie to admin routes. Deletion must pass the SAME path or the cookie survives. */
+const COOKIE_PATH = "/admin";
 const MAX_AGE_SECONDS = 60 * 60 * 8;
 
 function getSecret() {
@@ -39,13 +41,13 @@ export async function createAdminSession() {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     maxAge: MAX_AGE_SECONDS,
-    path: "/admin",
+    path: COOKIE_PATH,
   });
 }
 
 export async function clearAdminSession() {
   const cookieStore = await cookies();
-  cookieStore.delete(COOKIE_NAME);
+  cookieStore.delete({ name: COOKIE_NAME, path: COOKIE_PATH });
 }
 
 export async function isAdminAuthenticated() {
