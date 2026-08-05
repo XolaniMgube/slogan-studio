@@ -4,19 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Logo } from "./logo";
-import { SearchIcon, UserIcon, CartIcon, MenuIcon, CloseIcon } from "./icons";
+import { SearchIcon, CartIcon, MenuIcon, CloseIcon } from "./icons";
 import { useCart, selectCount } from "@/lib/cart-store";
-import { CATEGORIES } from "@/lib/products";
+import { CATEGORIES } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const PAGES: [string, string][] = [
   ["Home", "/"],
   ["Shop", "/shop"],
-  ["Warranty", "/warranty"],
-  ["Shipping", "/shipping"],
+  ["Warranty & Shipping", "/warranty-shipping"],
   ["Track order", "/track"],
-  ["About", "/about"],
-  ["Services", "/services"],
+  ["About & Services", "/about"],
 ];
 
 export function Header() {
@@ -57,14 +55,9 @@ export function Header() {
           />
         </div>
 
+        {/* No account icon: customer logins are out of scope — checkout is guest-only
+            and order lookups happen through /track. */}
         <div className="ml-auto flex items-center gap-2 md:ml-0">
-          <Link
-            href="/account"
-            className="grid h-11 w-11 place-items-center rounded-md border border-white/10 bg-white/[0.035] transition hover:border-white/20 hover:bg-white/[0.08]"
-            aria-label="Account"
-          >
-            <UserIcon className="h-5 w-5 stroke-white" />
-          </Link>
           <button
             onClick={openCart}
             className="relative grid h-11 w-11 place-items-center rounded-md border border-white/10 bg-white/[0.035] transition hover:border-white/20 hover:bg-white/[0.08]"

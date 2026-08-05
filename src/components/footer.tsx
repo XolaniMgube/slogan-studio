@@ -23,10 +23,9 @@ export function Footer() {
             title="Company"
             links={[
               ["About us", "/about"],
-              ["Warranty", "/warranty"],
-              ["Shipping", "/shipping"],
+              ["Services", "/about#services"],
+              ["Warranty & Shipping", "/warranty-shipping"],
               ["Track order", "/track"],
-              ["Services", "/services"],
             ]}
           />
 

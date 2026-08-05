@@ -3,6 +3,7 @@ import { createPaylink, isIkhokhaConfigured } from "@/lib/ikhokha";
 import { calculateShipping } from "@/lib/shop-config";
 import { CheckoutCustomer, createOrderNumber, createPendingOrder } from "@/lib/orders-db";
 import { getProductBySlug } from "@/lib/products-db";
+import { VALIDATION_MESSAGES, isValidEmail, isValidName, isValidSaMobile, toInternationalPhone } from "@/lib/validation";
 
 interface CheckoutItemInput {
   id: string;
@@ -26,9 +27,23 @@ export async function POST(req: NextRequest) {
   if (!body.items?.length) {
     return NextResponse.json({ error: "Cart is empty." }, { status: 400 });
   }
-  if (!body.customer?.name || !body.customer.email || !body.customer.phone || !body.customer.address || !body.customer.city || !body.customer.postal) {
+  if (!body.customer?.address || !body.customer.city || !body.customer.postal) {
     return NextResponse.json({ error: "Delivery details are incomplete." }, { status: 400 });
   }
+
+  // Same rules the form applies — repeated here because a crafted request never
+  // goes near the form.
+  if (!isValidName(body.customer.name ?? "")) {
+    return NextResponse.json({ error: VALIDATION_MESSAGES.name }, { status: 400 });
+  }
+  if (!isValidEmail(body.customer.email ?? "")) {
+    return NextResponse.json({ error: VALIDATION_MESSAGES.email }, { status: 400 });
+  }
+  if (!isValidSaMobile(body.customer.phone ?? "")) {
+    return NextResponse.json({ error: VALIDATION_MESSAGES.phone }, { status: 400 });
+  }
+
+  const customer = { ...body.customer, phone: toInternationalPhone(body.customer.phone) };
   if (!isIkhokhaConfigured()) {
     return NextResponse.json({ error: "Payments are not configured yet." }, { status: 503 });
   }
@@ -78,7 +93,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const order = await createPendingOrder({
-      customer: body.customer,
+      customer,
       items: resolvedItems,
       ikhokhaCheckoutId: result.checkoutId,
       paymentReference: reference,

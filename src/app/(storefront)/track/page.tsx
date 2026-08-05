@@ -26,11 +26,20 @@ export default function TrackOrderPage() {
         <form action={formAction} className="grid gap-4">
           <label className="grid gap-1.5">
             <span className="font-display text-sm font-semibold">Order number</span>
-            <input name="orderNumber" placeholder="SS-XXXXXXXXXX" required className="input" />
+            <input
+              name="orderNumber"
+              placeholder="SSXXXXXXXXXX"
+              required
+              autoCapitalize="characters"
+              autoCorrect="off"
+              spellCheck={false}
+              className="input uppercase placeholder:normal-case"
+            />
+            <span className="text-xs text-muted">Capitals, lower case, spaces or dashes — all fine.</span>
           </label>
           <label className="grid gap-1.5">
             <span className="font-display text-sm font-semibold">Email</span>
-            <input name="email" type="email" placeholder="you@example.com" required className="input" />
+            <input name="email" type="email" required autoCorrect="off" className="input" />
           </label>
 
           {state?.error && <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{state.error}</p>}

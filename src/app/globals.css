@@ -43,28 +43,48 @@
   }
 
   .input {
-    @apply rounded-md border border-hairline bg-white px-3.5 py-2.5 text-sm outline-none transition focus:border-volt focus:ring-2 focus:ring-volt/20 disabled:bg-paper-2 disabled:text-muted;
+    @apply rounded-md border border-hairline-strong bg-white px-3.5 py-2.5 text-sm outline-none transition focus:border-volt focus:ring-2 focus:ring-volt/20 disabled:bg-paper-2 disabled:text-muted;
   }
 
-  /* Google's PlaceAutocompleteElement ships its own input (partly in shadow DOM),
-     so match the surrounding .input fields via its exposed custom properties and
-     style whatever light-DOM input we can still reach. */
+  /* Google's PlaceAutocompleteElement renders its input inside shadow DOM, so a
+     descendant selector can't border it. Border the WRAPPER instead and let the
+     widget sit inside transparently — that's why this reads as a normal field.
+
+     NEVER add `overflow-hidden` here: the suggestions dropdown is a child of the
+     widget, so clipping the wrapper makes the autocomplete list invisible and the
+     whole feature appear broken. Round the child instead. */
+  .gmp-address-field {
+    @apply relative flex w-full items-center rounded-md border border-hairline-strong bg-white transition;
+  }
+
+  .gmp-address-field:focus-within {
+    @apply border-volt shadow-[0_0_0_3px_rgba(0,148,255,.15)];
+  }
+
+  /* color-scheme MUST be set on the widget element itself, not just the wrapper —
+     otherwise it follows the visitor's system theme and renders as a black bar
+     on this white form. The custom properties can't reach its shadow DOM. */
   .gmp-address-field,
   .gmp-address-field > * {
-    display: block;
-    width: 100%;
-    /* The widget follows the visitor's system theme by default, which renders it
-       dark against this light form. `color-scheme` is Google's documented way to
-       pin it — the custom properties below can't reach into its shadow DOM. */
     color-scheme: light;
-    --gmp-mat-color-surface: theme("colors.paper.DEFAULT");
-    --gmp-mat-color-on-surface: theme("colors.ink.DEFAULT");
-    --gmp-mat-color-outline: theme("colors.hairline");
-    --gmp-mat-color-primary: theme("colors.volt.DEFAULT");
+    --gmp-mat-color-surface: #ffffff;
+    --gmp-mat-color-on-surface: #080810;
+    --gmp-mat-color-outline: transparent;
+    --gmp-mat-color-primary: #0094ff;
   }
 
+  .gmp-address-field > * {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    background: transparent;
+    /* Matches the wrapper's corners without clipping the dropdown. */
+    border-radius: theme("borderRadius.md");
+  }
+
+  /* Reachable only when the widget renders light DOM; harmless otherwise. */
   .gmp-address-field input {
-    @apply w-full border border-hairline bg-white px-3.5 py-2.5 text-sm outline-none transition focus:border-volt;
+    @apply w-full border-0 bg-transparent px-3.5 py-2.5 text-sm outline-none;
   }
 
   .card-shear {

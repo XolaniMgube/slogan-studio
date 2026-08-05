@@ -3,11 +3,15 @@ import { OrderStatus, PaymentStatus } from "@/lib/database.types";
 import { getAdminOrders } from "@/lib/orders-db";
 import { isSupabaseAdminConfigured } from "@/lib/supabase/server";
 import { formatRand } from "@/lib/utils";
-import { AdminNav } from "../admin-nav";
+import { SubmitButton } from "@/components/submit-button";
+import { AdminPageHeader } from "../admin-shell";
 import { updateOrderStatusAction } from "../actions";
 
 const orderStatuses: OrderStatus[] = ["pending_payment", "paid", "processing", "ready_to_ship", "shipped", "delivered", "cancelled", "refunded"];
 const paymentStatuses: PaymentStatus[] = ["pending", "paid", "failed", "refunded"];
+
+/** Never serve a cached order list — an admin acting on stale statuses is worse than a slower page. */
+export const dynamic = "force-dynamic";
 
 export default async function AdminOrdersPage() {
   await requireAdmin();
@@ -16,13 +20,8 @@ export default async function AdminOrdersPage() {
 
   return (
     <>
-      <AdminNav />
-      <main className="wrap py-10">
-        <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold tracking-[-0.5px]">Orders</h1>
-          <p className="mt-2 text-muted">View customer orders and update payment or fulfilment status.</p>
-        </div>
-
+      <AdminPageHeader title="Orders" description="View customer orders and update payment or fulfilment status." />
+      <div className="px-6 py-8 lg:px-9">
         {!configured && (
           <p className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
             Supabase admin credentials are missing. Orders will appear here after Supabase is configured.
@@ -31,7 +30,15 @@ export default async function AdminOrdersPage() {
 
         <div className="grid gap-4">
           {orders.map((order) => (
-            <article key={order.id} className="rounded-lg border border-hairline bg-white p-5">
+            /* The key includes the two status values on purpose. The <select>s below
+               are uncontrolled (defaultValue), and React only applies defaultValue on
+               mount — so after a status update the fresh server value would render
+               into a DOM node that keeps its old selection. Changing the key remounts
+               the card, letting the new values take. */
+            <article
+              key={`${order.id}-${order.status}-${order.payment_status}`}
+              className="rounded-lg border border-hairline bg-white p-5"
+            >
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <p className="font-display text-lg font-bold">{order.order_number}</p>
@@ -84,9 +91,9 @@ export default async function AdminOrdersPage() {
                     ))}
                   </select>
                 </label>
-                <button disabled={!configured} className="btn btn-primary disabled:cursor-not-allowed disabled:opacity-50">
+                <SubmitButton disabled={!configured} pendingLabel="Updating…">
                   Update order
-                </button>
+                </SubmitButton>
               </form>
             </article>
           ))}
@@ -98,7 +105,7 @@ export default async function AdminOrdersPage() {
             </div>
           )}
         </div>
-      </main>
+      </div>
     </>
   );
 }

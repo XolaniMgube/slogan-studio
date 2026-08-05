@@ -67,6 +67,34 @@ export const CheckIcon = ({ className }: IconProps) => (
   </svg>
 );
 
+export const LockIcon = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={`${base} ${className ?? ""}`} strokeWidth={1.8}>
+    <rect x="4" y="10" width="16" height="10" rx="2" />
+    <path d="M8 10V7a4 4 0 018 0v3" />
+  </svg>
+);
+
+export const ShieldIcon = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={`${base} ${className ?? ""}`} strokeWidth={1.8}>
+    <path d="M12 3l7 3v5c0 4.4-3 8.4-7 10-4-1.6-7-5.6-7-10V6z" />
+    <path d="M9 12l2 2 4-4" />
+  </svg>
+);
+
+export const TruckIcon = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={`${base} ${className ?? ""}`} strokeWidth={1.8}>
+    <path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z" />
+    <circle cx="7" cy="18" r="1.6" />
+    <circle cx="17.5" cy="18" r="1.6" />
+  </svg>
+);
+
+export const ChatIcon = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={`${base} ${className ?? ""}`} strokeWidth={1.8}>
+    <path d="M21 12a8 8 0 01-8 8H4l2-3a8 8 0 1115-5z" />
+  </svg>
+);
+
 export const WrenchIcon = ({ className }: IconProps) => (
   <svg viewBox="0 0 24 24" className={`${base} ${className ?? ""}`} strokeWidth={1.6}>
     <path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2-2 2.5-2.5z" />

@@ -1,9 +1,18 @@
 import "server-only";
 
 import { Product } from "./types";
-import { PRODUCTS } from "./products";
-import { ProductInsert, ProductRow, ProductStatus } from "./database.types";
+import { ProductRow, ProductStatus } from "./database.types";
 import { createSupabaseAdminClient, createSupabasePublicClient, isSupabaseAdminConfigured, isSupabaseConfigured } from "./supabase/server";
+
+/**
+ * PRODUCT DATA — Supabase is the only source of truth.
+ *
+ * These functions THROW when the database can't be reached. That's deliberate:
+ * this layer used to fall back to a hardcoded mock catalogue, which meant a
+ * Supabase outage silently served customers products that don't exist, at
+ * prices that may be wrong, with an "Add to cart" button. Failing loudly is the
+ * safer failure. Callers render a "catalogue unavailable" state instead.
+ */
 
 export interface AdminProduct extends Product {
   sku?: string;
@@ -16,6 +25,10 @@ export interface AdminProduct extends Product {
   warrantyMonths: number;
   createdAt?: string;
   updatedAt?: string;
+}
+
+function assertConfigured(configured: boolean) {
+  if (!configured) throw new Error("Supabase is not configured — cannot load products.");
 }
 
 export function productRowToProduct(row: ProductRow): Product {
@@ -53,34 +66,8 @@ export function productRowToAdminProduct(row: ProductRow): AdminProduct {
   };
 }
 
-export function productToInsert(product: Product): ProductInsert {
-  return {
-    slug: product.slug,
-    sku: product.id,
-    name: product.name,
-    category: product.category,
-    brand: null,
-    model: null,
-    grade: product.grade,
-    status: product.stock > 0 ? "active" : "sold_out",
-    price_cents: product.price * 100,
-    compare_at_cents: product.compareAt ? product.compareAt * 100 : null,
-    shipping_cents: product.shipping * 100,
-    stock_qty: product.stock,
-    low_stock_threshold: 1,
-    spec: product.spec,
-    specs: product.specs,
-    description: product.description,
-    condition_notes: null,
-    warranty_months: 3,
-    images: product.images,
-    is_featured: Boolean(product.featured),
-    is_visible: true,
-  };
-}
-
 export async function getStoreProducts(): Promise<Product[]> {
-  if (!isSupabaseConfigured()) return PRODUCTS;
+  assertConfigured(isSupabaseConfigured());
 
   const supabase = createSupabasePublicClient();
   const { data, error } = await supabase
@@ -91,10 +78,7 @@ export async function getStoreProducts(): Promise<Product[]> {
     .order("is_featured", { ascending: false })
     .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("Failed to load products from Supabase:", error.message);
-    return PRODUCTS;
-  }
+  if (error) throw new Error(`Failed to load products: ${error.message}`);
 
   return data.map(productRowToProduct);
 }
@@ -104,8 +88,9 @@ export async function getFeaturedProducts(): Promise<Product[]> {
   return products.filter((product) => product.featured);
 }
 
+/** Returns undefined when the product genuinely doesn't exist. Throws when the lookup fails. */
 export async function getProductBySlug(slug: string): Promise<Product | undefined> {
-  if (!isSupabaseConfigured()) return PRODUCTS.find((product) => product.slug === slug);
+  assertConfigured(isSupabaseConfigured());
 
   const supabase = createSupabasePublicClient();
   const { data, error } = await supabase
@@ -116,10 +101,7 @@ export async function getProductBySlug(slug: string): Promise<Product | undefine
     .in("status", ["active", "sold_out"])
     .maybeSingle();
 
-  if (error) {
-    console.error("Failed to load product from Supabase:", error.message);
-    return PRODUCTS.find((product) => product.slug === slug);
-  }
+  if (error) throw new Error(`Failed to load product "${slug}": ${error.message}`);
 
   return data ? productRowToProduct(data) : undefined;
 }
@@ -130,16 +112,7 @@ export async function getRelatedProducts(product: Product, limit = 4): Promise<P
 }
 
 export async function getAdminProducts(): Promise<AdminProduct[]> {
-  if (!isSupabaseAdminConfigured()) {
-    return PRODUCTS.map((product) => ({
-      ...product,
-      sku: product.id,
-      status: product.stock > 0 ? "active" : "sold_out",
-      isVisible: true,
-      lowStockThreshold: 1,
-      warrantyMonths: 3,
-    }));
-  }
+  assertConfigured(isSupabaseAdminConfigured());
 
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase.from("products").select("*").order("updated_at", { ascending: false });
@@ -149,37 +122,11 @@ export async function getAdminProducts(): Promise<AdminProduct[]> {
 }
 
 export async function getAdminProduct(id: string): Promise<AdminProduct | undefined> {
-  if (!isSupabaseAdminConfigured()) {
-    const product = PRODUCTS.find((item) => item.id === id);
-    return product
-      ? {
-          ...product,
-          sku: product.id,
-          status: product.stock > 0 ? "active" : "sold_out",
-          isVisible: true,
-          lowStockThreshold: 1,
-          warrantyMonths: 3,
-        }
-      : undefined;
-  }
+  assertConfigured(isSupabaseAdminConfigured());
 
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase.from("products").select("*").eq("id", id).maybeSingle();
 
   if (error) throw new Error(error.message);
   return data ? productRowToAdminProduct(data) : undefined;
-}
-
-export async function seedProductsIfEmpty() {
-  if (!isSupabaseAdminConfigured()) return { skipped: true, inserted: 0 };
-
-  const supabase = createSupabaseAdminClient();
-  const { count, error: countError } = await supabase.from("products").select("id", { count: "exact", head: true });
-  if (countError) throw new Error(countError.message);
-  if ((count ?? 0) > 0) return { skipped: true, inserted: 0 };
-
-  const { error } = await supabase.from("products").insert(PRODUCTS.map(productToInsert));
-  if (error) throw new Error(error.message);
-
-  return { skipped: false, inserted: PRODUCTS.length };
 }
