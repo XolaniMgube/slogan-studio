@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { LoadingOverlay } from "@/components/loading-overlay";
 import { loginAdmin } from "../actions";
 
 export function LoginForm({ configured }: { configured: boolean }) {
@@ -23,9 +24,14 @@ export function LoginForm({ configured }: { configured: boolean }) {
         />
       </label>
       {state?.error && <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{state.error}</p>}
-      <button disabled={!configured || pending} className="btn btn-primary justify-center disabled:cursor-not-allowed disabled:opacity-50">
-        {pending ? "Signing in..." : "Sign in"}
+      <button
+        disabled={!configured || pending}
+        aria-busy={pending}
+        className="btn btn-primary justify-center disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        Sign in
       </button>
+      {pending && <LoadingOverlay label="Signing in…" />}
     </form>
   );
 }

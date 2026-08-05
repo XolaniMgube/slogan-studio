@@ -11,7 +11,9 @@ const config: Config = {
         mist: { DEFAULT: "#E8F4FF", line: "#CFE6FB" },
         grade: { a: "#10B981", b: "#F59E0B", c: "#94A3B8" },
         muted: "#5B6573",
-        hairline: "#E9ECF1",
+        // `strong` is for form controls — the default hairline is too faint to
+        // read as an input boundary on a white card.
+        hairline: { DEFAULT: "#E9ECF1", strong: "#C9D1DC" },
       },
       fontFamily: {
         display: ["var(--font-display)", "sans-serif"],

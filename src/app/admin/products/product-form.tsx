@@ -1,5 +1,6 @@
-import { CATEGORIES } from "@/lib/products";
+import { CATEGORIES } from "@/lib/types";
 import { AdminProduct } from "@/lib/products-db";
+import { SubmitButton } from "@/components/submit-button";
 import { saveProductAction } from "../actions";
 
 const statuses = ["draft", "active", "sold_out", "archived"] as const;
@@ -98,9 +99,9 @@ export function ProductForm({ product, disabled = false }: { product?: AdminProd
         </label>
       </div>
 
-      <button disabled={disabled} className="btn btn-primary w-fit disabled:cursor-not-allowed disabled:opacity-50">
+      <SubmitButton disabled={disabled} pendingLabel="Saving product…" className="w-fit">
         Save product
-      </button>
+      </SubmitButton>
     </form>
   );
 }

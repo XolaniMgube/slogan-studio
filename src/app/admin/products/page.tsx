@@ -3,35 +3,25 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { getAdminProducts } from "@/lib/products-db";
 import { formatRand } from "@/lib/utils";
 import { isSupabaseAdminConfigured } from "@/lib/supabase/server";
-import { AdminNav } from "../admin-nav";
-import { seedProductsAction } from "../actions";
+import { AdminPageHeader } from "../admin-shell";
 
 export default async function AdminProductsPage() {
   await requireAdmin();
-  const products = await getAdminProducts();
   const configured = isSupabaseAdminConfigured();
+  const products = configured ? await getAdminProducts() : [];
 
   return (
     <>
-      <AdminNav />
-      <main className="wrap py-10">
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="font-display text-3xl font-bold tracking-[-0.5px]">Products</h1>
-            <p className="mt-2 text-muted">Manage catalogue visibility, stock and pricing.</p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <form action={seedProductsAction}>
-              <button disabled={!configured} className="btn btn-ghost disabled:cursor-not-allowed disabled:opacity-50">
-                Seed mock products
-              </button>
-            </form>
-            <Link href="/admin/products/new" className="btn btn-primary">
-              Add product
-            </Link>
-          </div>
-        </div>
-
+      <AdminPageHeader
+        title="Products"
+        description="Manage catalogue visibility, stock and pricing."
+        action={
+          <Link href="/admin/products/new" className="btn btn-primary">
+            Add product
+          </Link>
+        }
+      />
+      <div className="px-6 py-8 lg:px-9">
         {!configured && (
           <p className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
             Supabase admin credentials are missing. Product edits are disabled until env vars are configured.
@@ -82,7 +72,7 @@ export default async function AdminProductsPage() {
             </tbody>
           </table>
         </div>
-      </main>
+      </div>
     </>
   );
 }

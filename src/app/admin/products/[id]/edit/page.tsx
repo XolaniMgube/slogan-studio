@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getAdminProduct } from "@/lib/products-db";
 import { isSupabaseAdminConfigured } from "@/lib/supabase/server";
-import { AdminNav } from "../../../admin-nav";
+import { AdminPageHeader } from "../../../admin-shell";
 import { ProductForm } from "../../product-form";
 
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
@@ -13,12 +13,10 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
 
   return (
     <>
-      <AdminNav />
-      <main className="wrap max-w-[980px] py-10">
-        <h1 className="font-display text-3xl font-bold tracking-[-0.5px]">Edit product</h1>
-        <p className="mb-8 mt-2 text-muted">{product.name}</p>
+      <AdminPageHeader title="Edit product" description={product.name} />
+      <div className="max-w-[980px] px-6 py-8 lg:px-9">
         <ProductForm product={product} disabled={!isSupabaseAdminConfigured()} />
-      </main>
+      </div>
     </>
   );
 }

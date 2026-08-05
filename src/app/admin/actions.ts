@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { clearAdminSession, createAdminSession, requireAdmin, verifyPassword } from "@/lib/admin-auth";
 import { createSupabaseAdminClient, isSupabaseAdminConfigured } from "@/lib/supabase/server";
 import { OrderStatus, PaymentStatus, ProductGrade, ProductStatus } from "@/lib/database.types";
-import { seedProductsIfEmpty } from "@/lib/products-db";
 import { restoreOrderStock } from "@/lib/orders-db";
 import { getImageFiles, uploadProductImages } from "@/lib/product-images";
 
@@ -20,15 +19,6 @@ export async function loginAdmin(_: { error?: string } | undefined, formData: Fo
 export async function logoutAdmin() {
   await clearAdminSession();
   redirect("/admin/login");
-}
-
-export async function seedProductsAction() {
-  await requireAdmin();
-
-  await seedProductsIfEmpty();
-  revalidatePath("/");
-  revalidatePath("/shop");
-  revalidatePath("/admin/products");
 }
 
 export async function saveProductAction(formData: FormData) {
@@ -94,13 +84,30 @@ export async function updateOrderStatusAction(formData: FormData) {
   const paymentStatus = String(formData.get("paymentStatus") ?? "pending") as PaymentStatus;
   const now = new Date().toISOString();
 
-  const { error } = await createSupabaseAdminClient()
+  const supabase = createSupabaseAdminClient();
+
+  // Read the existing timestamps first. Stamping `now` unconditionally would
+  // rewrite paid_at on every later edit — marking a week-old paid order as
+  // "shipped" would move its payment time to today and destroy the record of
+  // when the customer actually paid.
+  const { data: existing, error: readError } = await supabase
+    .from("orders")
+    .select("paid_at, fulfilled_at")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (readError) throw new Error(readError.message);
+
+  const isFulfilled = status === "shipped" || status === "delivered";
+
+  const { error } = await supabase
     .from("orders")
     .update({
       status,
       payment_status: paymentStatus,
-      paid_at: paymentStatus === "paid" ? now : null,
-      fulfilled_at: status === "shipped" || status === "delivered" ? now : null,
+      // Keep the original timestamp if one exists; only stamp on first transition.
+      paid_at: paymentStatus === "paid" ? (existing?.paid_at ?? now) : null,
+      fulfilled_at: isFulfilled ? (existing?.fulfilled_at ?? now) : null,
     })
     .eq("id", id);
 

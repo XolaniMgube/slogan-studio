@@ -50,7 +50,7 @@ export function WhySection() {
         </Reveal>
 
         <Reveal className="mt-9 flex flex-wrap items-center gap-[18px]">
-          <Link href="/warranty" className="btn btn-primary">
+          <Link href="/warranty-shipping" className="btn btn-primary">
             <span>Read the condition guide</span>
             <ArrowIcon className="h-4 w-4 stroke-white" />
           </Link>
@@ -86,7 +86,7 @@ export function PromoSection() {
               </span>
             ))}
           </div>
-          <Link href="/services" className="btn btn-primary">
+          <Link href="/about#services" className="btn btn-primary">
             <span>Explore services</span>
             <ArrowIcon className="h-4 w-4 stroke-white" />
           </Link>

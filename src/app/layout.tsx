@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Inter } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
-import { CartDrawer } from "@/components/cart-drawer";
+
+/**
+ * Root layout holds only the document shell and fonts.
+ *
+ * Storefront chrome (header, footer, cart drawer) lives in the (storefront)
+ * route group's layout, and the admin dashboard has its own — otherwise the
+ * shop header renders on top of the back office.
+ */
 
 const display = Space_Grotesk({
   subsets: ["latin"],
@@ -26,12 +31,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${display.variable} ${body.variable}`}>
-      <body>
-        <Header />
-        <main>{children}</main>
-        <Footer />
-        <CartDrawer />
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

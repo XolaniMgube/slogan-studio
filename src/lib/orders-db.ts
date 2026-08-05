@@ -2,6 +2,7 @@ import "server-only";
 
 import { randomBytes } from "crypto";
 import { calculateShipping } from "./shop-config";
+import { orderNumberCandidates } from "./validation";
 import { OrderRow, OrderStatus, PaymentStatus, ProductGrade } from "./database.types";
 import { createSupabaseAdminClient, isSupabaseAdminConfigured } from "./supabase/server";
 
@@ -46,12 +47,15 @@ const ORDER_NUMBER_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
  * authorization for customer order tracking, and they're handed to the browser
  * at checkout. The previous `Date.now().toString(36)` was a plain timestamp —
  * trivially enumerable, so anyone could walk the sequence and probe orders.
+ *
+ * No separator: customers retype these into /track, and a dash is one more thing
+ * to get wrong. Lookups normalise input anyway, so old dashed numbers still work.
  */
 export function createOrderNumber() {
   const bytes = randomBytes(10);
   let out = "";
   for (const byte of bytes) out += ORDER_NUMBER_ALPHABET[byte % ORDER_NUMBER_ALPHABET.length];
-  return `SS-${out}`;
+  return `SS${out}`;
 }
 
 export async function createPendingOrder(input: {
@@ -255,11 +259,16 @@ export interface TrackedOrder {
 export async function getOrderForTracking(orderNumber: string, email: string): Promise<TrackedOrder | null> {
   if (!isSupabaseAdminConfigured()) return null;
 
+  // Accepts "ssabc123", "SS-ABC123", "ss abc 123" — and matches orders stored in
+  // either the old dashed format or the current one.
+  const candidates = orderNumberCandidates(orderNumber);
+  if (!candidates.length) return null;
+
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("orders")
     .select("order_number, status, payment_status, placed_at, paid_at, fulfilled_at, shipping_city, customer_email")
-    .eq("order_number", orderNumber.trim().toUpperCase())
+    .in("order_number", candidates)
     .maybeSingle();
 
   if (error) throw new Error(error.message);

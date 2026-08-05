@@ -3,8 +3,7 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ProductCard } from "@/components/product-card";
-import { CATEGORIES } from "@/lib/products";
-import { Category, Grade, Product } from "@/lib/types";
+import { CATEGORIES, Category, Grade, Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function ShopClient({ products }: { products: Product[] }) {

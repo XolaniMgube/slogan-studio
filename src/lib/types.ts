@@ -13,6 +13,21 @@ export type Category =
   | "Laptop Skins"
   | "Mouse Pads";
 
+/** Drives the shop filters, the header menu and the admin category picker. */
+export const CATEGORIES: Category[] = [
+  "Laptops",
+  "MacBooks",
+  "iPhones",
+  "Headsets",
+  "Keyboards",
+  "Mice",
+  "AirPods",
+  "Phone Cases",
+  "Chargers",
+  "Laptop Skins",
+  "Mouse Pads",
+];
+
 export interface Product {
   id: string;
   slug: string;

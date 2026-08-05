@@ -1,25 +1,30 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getAllProducts } from "@/lib/products";
 import { getProductBySlug, getRelatedProducts } from "@/lib/products-db";
 import { GRADE_LABEL, GRADE_BLURB } from "@/lib/types";
 import { formatRand } from "@/lib/utils";
-import { GradeBadge } from "@/components/grade-badge";
+import { ProductGallery } from "@/components/product-gallery";
 import { AddToCart } from "@/components/add-to-cart";
 import { ProductCard } from "@/components/product-card";
 import { CheckIcon, ArrowIcon } from "@/components/icons";
 
-export function generateStaticParams() {
-  return getAllProducts().map((p) => ({ slug: p.slug }));
-}
+export const revalidate = 60;
+
+// No generateStaticParams: products live in the database and change through the
+// admin panel, so the set of slugs isn't known at build time. Pages render on
+// demand and are then cached per the revalidate window above.
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+
+  // A failed lookup and a genuinely missing product are different things: a
+  // failure throws through to error.tsx (retryable, and ISR can serve stale),
+  // while a missing product is a real 404.
   const product = await getProductBySlug(slug);
   if (!product) notFound();
 
   const related = await getRelatedProducts(product);
+
   const saving = product.compareAt ? product.compareAt - product.price : 0;
 
   return (
@@ -35,12 +40,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       </nav>
 
       <div className="grid gap-10 md:grid-cols-2">
-        {/* image */}
-        <div className="relative aspect-square overflow-hidden border border-hairline bg-gradient-to-br from-mist to-white">
-          <GradeBadge grade={product.grade} className="absolute left-4 top-4 z-[3]" />
-          <Image src={product.images[0]} alt={product.name} fill sizes="(max-width:768px) 100vw, 50vw" className="object-contain p-6" priority />
-          <span className="pointer-events-none absolute -bottom-10 -right-8 font-display text-[260px] font-bold leading-none text-volt/[0.05]">/</span>
-        </div>
+        {/* images */}
+        <ProductGallery images={product.images} name={product.name} grade={product.grade} />
 
         {/* info */}
         <div>
