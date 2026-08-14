@@ -23,6 +23,10 @@ before real customers can use the site.
       (`https://sloganstudio.co.za/*` and `https://*.sloganstudio.co.za/*`)
 - [ ] **Change `ADMIN_DASHBOARD_PASSWORD`** if the current one has been shared
 - [ ] **Remove or hide the "Test Iphone" product** (R2, category Laptops)
+- [ ] **Replace the demo customer reviews.** `src/lib/reviews.ts` contains six
+      invented reviews written to demo the design — no real customer said any of
+      them. Swap in genuine feedback (WhatsApp, Google reviews, email) before the
+      site is promoted to anyone.
 - [ ] Confirm all Supabase migrations have been run against production
 
 ---

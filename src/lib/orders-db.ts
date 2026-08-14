@@ -281,6 +281,60 @@ export async function getOrderForTracking(orderNumber: string, email: string): P
   return tracked;
 }
 
+/**
+ * Order states that still need action from the shop. Everything else —
+ * delivered, cancelled, refunded — is finished business.
+ */
+export const UNRESOLVED_ORDER_STATUSES: OrderStatus[] = [
+  "pending_payment",
+  "paid",
+  "processing",
+  "ready_to_ship",
+  "shipped",
+];
+
+/**
+ * Product IDs that appear on an order still in flight.
+ *
+ * Deleting one of these would null its product_id on the order line, so the
+ * stock decrement/restore functions would silently skip it — you'd be left
+ * fulfilling an order for a product the system no longer knows about.
+ */
+export async function getProductIdsWithUnresolvedOrders(): Promise<Set<string>> {
+  if (!isSupabaseAdminConfigured()) return new Set();
+
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("order_items")
+    .select("product_id, orders!inner(status)")
+    .not("product_id", "is", null)
+    .in("orders.status", UNRESOLVED_ORDER_STATUSES);
+
+  if (error) throw new Error(error.message);
+
+  return new Set((data ?? []).map((row) => row.product_id).filter((id): id is string => Boolean(id)));
+}
+
+/** Orders still in flight that include this product, for an explanatory message. */
+export async function getUnresolvedOrdersForProduct(productId: string): Promise<{ order_number: string; status: OrderStatus }[]> {
+  if (!isSupabaseAdminConfigured()) return [];
+
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("order_items")
+    .select("orders!inner(order_number, status)")
+    .eq("product_id", productId)
+    .in("orders.status", UNRESOLVED_ORDER_STATUSES);
+
+  if (error) throw new Error(error.message);
+
+  const seen = new Map<string, { order_number: string; status: OrderStatus }>();
+  for (const row of (data ?? []) as unknown as { orders: { order_number: string; status: OrderStatus } }[]) {
+    if (row.orders) seen.set(row.orders.order_number, row.orders);
+  }
+  return [...seen.values()];
+}
+
 export async function getAdminOrders(): Promise<AdminOrder[]> {
   if (!isSupabaseAdminConfigured()) return [];
 

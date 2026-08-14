@@ -39,6 +39,35 @@ export async function uploadProductImages(files: File[], slug: string) {
   return uploaded;
 }
 
+/**
+ * Removes a product's uploaded images from storage, translating the stored
+ * public URLs back into bucket paths.
+ *
+ * Never throws: a product delete that succeeded shouldn't be reported as failed
+ * because cleanup didn't. Orphaned files cost a little storage; a half-deleted
+ * product confuses the admin.
+ */
+export async function deleteProductImages(urls: string[]) {
+  if (!isSupabaseAdminConfigured() || !urls.length) return;
+
+  const marker = `/${BUCKET}/`;
+  const paths = urls
+    .map((url) => {
+      const at = url.indexOf(marker);
+      return at === -1 ? null : url.slice(at + marker.length);
+    })
+    .filter((path): path is string => Boolean(path));
+
+  if (!paths.length) return;
+
+  try {
+    const { error } = await createSupabaseAdminClient().storage.from(BUCKET).remove(paths);
+    if (error) console.error(`[storage] Could not remove product images: ${error.message}`);
+  } catch (err) {
+    console.error("[storage] Could not remove product images:", err instanceof Error ? err.message : err);
+  }
+}
+
 export function getImageFiles(formData: FormData) {
   return ["image1", "image2", "image3"]
     .map((name) => formData.get(name))

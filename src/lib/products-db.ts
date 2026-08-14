@@ -14,6 +14,17 @@ import { createSupabaseAdminClient, createSupabasePublicClient, isSupabaseAdminC
  * safer failure. Callers render a "catalogue unavailable" state instead.
  */
 
+/** Ceiling on catalogue size. Enforced server-side in saveProductAction. */
+export const MAX_PRODUCTS = 100;
+
+export async function countProducts(): Promise<number> {
+  assertConfigured(isSupabaseAdminConfigured());
+
+  const { count, error } = await createSupabaseAdminClient().from("products").select("id", { count: "exact", head: true });
+  if (error) throw new Error(error.message);
+  return count ?? 0;
+}
+
 export interface AdminProduct extends Product {
   sku?: string;
   brand?: string;
@@ -115,7 +126,10 @@ export async function getAdminProducts(): Promise<AdminProduct[]> {
   assertConfigured(isSupabaseAdminConfigured());
 
   const supabase = createSupabaseAdminClient();
-  const { data, error } = await supabase.from("products").select("*").order("updated_at", { ascending: false });
+  /* Oldest first, by creation date. Ordering by updated_at made the list
+     reshuffle every time a product was edited, so the row you just saved jumped
+     to the top and everything else moved — impossible to work through a list. */
+  const { data, error } = await supabase.from("products").select("*").order("created_at", { ascending: true });
 
   if (error) throw new Error(error.message);
   return data.map(productRowToAdminProduct);

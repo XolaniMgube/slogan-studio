@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProductBySlug, getRelatedProducts } from "@/lib/products-db";
 import { GRADE_LABEL, GRADE_BLURB } from "@/lib/types";
-import { formatRand } from "@/lib/utils";
+import { formatRand, safeDecode } from "@/lib/utils";
 import { ProductGallery } from "@/components/product-gallery";
 import { AddToCart } from "@/components/add-to-cart";
 import { ProductCard } from "@/components/product-card";
@@ -15,7 +15,11 @@ export const revalidate = 60;
 // demand and are then cached per the revalidate window above.
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  // Decode defensively: a slug containing spaces arrives percent-encoded, and
+  // matching "Mouse%20Pad" against a stored "Mouse Pad" silently 404s a live
+  // product. No-op for slugs that need no encoding.
+  const slug = safeDecode(rawSlug);
 
   // A failed lookup and a genuinely missing product are different things: a
   // failure throws through to error.tsx (retryable, and ISR can serve stale),
@@ -99,9 +103,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               View all <ArrowIcon className="h-4 w-4 stroke-volt" />
             </Link>
           </div>
+          {/* Only the first two on phones — four cards is a long scroll after the
+              full product detail, and "View all" above already covers the rest. */}
           <div className="grid grid-cols-2 gap-3.5 md:grid-cols-4 md:gap-5">
-            {related.map((p) => (
-              <ProductCard key={p.id} product={p} />
+            {related.map((p, index) => (
+              <div key={p.id} className={index > 1 ? "hidden md:block" : undefined}>
+                <ProductCard product={p} />
+              </div>
             ))}
           </div>
         </section>
