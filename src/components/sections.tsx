@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Grade } from "@/lib/types";
 import { GRADE_LABEL, GRADE_BLURB } from "@/lib/types";
-import { ArrowIcon, CheckIcon, WrenchIcon } from "./icons";
+import { ArrowIcon, WrenchIcon } from "./icons";
 import { Reveal } from "./reveal";
 
 const GRADES: Grade[] = ["A", "B", "C"];
@@ -112,23 +112,5 @@ export function PromoSection() {
         </div>
       </div>
     </section>
-  );
-}
-
-const TRUST = ["3-Month Warranty", "Tested & Inspected", "Nationwide Delivery", "Secure Checkout", "Youth-Owned"];
-
-export function TrustMarquee() {
-  const doubled = [...TRUST, ...TRUST];
-  return (
-    <div className="overflow-hidden border-t border-white/[0.06] bg-ink py-[26px] text-white">
-      <div className="inline-flex animate-scroll-slow whitespace-nowrap">
-        {doubled.map((t, i) => (
-          <div key={i} className="flex items-center gap-3.5 px-10 font-display text-[19px] font-semibold tracking-[0.5px] text-white/85">
-            <CheckIcon className="h-[18px] w-[18px] stroke-volt" />
-            {t}
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }

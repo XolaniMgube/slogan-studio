@@ -212,30 +212,26 @@ export default function AboutPage() {
       <section className="wrap py-16 md:py-20">
         <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
           <Reveal>
-            <Eyebrow>Find us</Eyebrow>
+            <Eyebrow>Get in touch</Eyebrow>
             <h2 className="font-display text-[28px] font-bold leading-[1.1] tracking-[-0.6px] md:text-[32px]">
-              Come see the tech in person
+              Talk to a real person
             </h2>
             <p className="mt-3 text-[15px] leading-relaxed text-muted">
-              Local collection is available, and you&apos;re welcome to inspect a device before you buy.
+              Questions about a device, a repair or an order — message us and we&apos;ll come back to you.
             </p>
 
             <dl className="mt-7 grid gap-5 sm:grid-cols-2">
               <div>
-                <dt className="font-display text-[13px] font-semibold uppercase tracking-[1px] text-muted">Address</dt>
+                <dt className="font-display text-[13px] font-semibold uppercase tracking-[1px] text-muted">WhatsApp</dt>
                 <dd className="mt-1.5 text-[15px] leading-relaxed">
-                  2 Cassandra Avenue
-                  <br />
-                  Bedworth Park, Vereeniging, 1939
+                  <a href="https://wa.me/27739812427" className="font-semibold text-volt hover:text-ink">
+                    073 981 2427
+                  </a>
                 </dd>
               </div>
               <div>
-                <dt className="font-display text-[13px] font-semibold uppercase tracking-[1px] text-muted">Get in touch</dt>
+                <dt className="font-display text-[13px] font-semibold uppercase tracking-[1px] text-muted">Email</dt>
                 <dd className="mt-1.5 text-[15px] leading-relaxed">
-                  <a href="https://wa.me/27739812427" className="font-semibold text-volt hover:text-ink">
-                    WhatsApp 073 981 2427
-                  </a>
-                  <br />
                   <a href="mailto:info@sloganstudio.co.za" className="hover:text-volt">
                     info@sloganstudio.co.za
                   </a>
@@ -256,7 +252,7 @@ export default function AboutPage() {
           </Reveal>
 
           <Reveal>
-            <ImageSlot label="Storefront photo or map" ratio="aspect-[4/3]" className="h-full" />
+            <ImageSlot label="Team or workspace photo" ratio="aspect-[4/3]" className="h-full" />
           </Reveal>
         </div>
       </section>

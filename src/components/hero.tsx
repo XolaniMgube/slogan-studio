@@ -37,8 +37,12 @@ export function Hero({ products = [] }: { products?: Product[] }) {
       />
       <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(8,8,16,.92)_0%,rgba(8,8,16,.78)_48%,rgba(0,148,255,.16)_100%)]" />
 
-      <div className="wrap relative z-[2] grid items-center gap-12 py-16 md:grid-cols-[1fr_1.04fr] md:py-20 lg:py-[88px]">
-        <div>
+      {/* min-w-0 on the grid children is load-bearing: grid items default to
+          min-width:auto and refuse to shrink below their content, so the wide
+          slide track below would stretch the whole page past the viewport on
+          phones and get clipped by body{overflow-x:hidden}. */}
+      <div className="wrap relative z-[2] grid items-center gap-10 py-12 sm:gap-12 sm:py-16 md:grid-cols-[1fr_1.04fr] md:py-20 lg:py-[88px]">
+        <div className="min-w-0">
           <span className="mb-5 inline-flex animate-rise items-center gap-2.5 font-display text-xs font-semibold uppercase tracking-[2px] text-volt [animation-delay:.1s]">
             <span className="h-[7px] w-[7px] animate-pulse2 rounded-full bg-volt" />
             Latest Drops · In Stock Now
@@ -49,8 +53,11 @@ export function Hero({ products = [] }: { products?: Product[] }) {
               <span className="text-volt [text-shadow:0_0_30px_rgba(0,148,255,.35)]">engineered</span> to last.
             </span>
           </h1>
-          <p className="mb-[32px] max-w-[500px] animate-rise text-[17px] leading-relaxed text-[#b6becb] md:text-lg [animation-delay:.42s]">
-            Shop tested laptops, MacBooks, iPhones and accessories with transparent grading, warranty cover and nationwide delivery.
+          {/* The stats strip below already states grading, warranty and delivery —
+              on a phone the long version just repeats them above the fold. */}
+          <p className="mb-7 max-w-[500px] animate-rise text-[15.5px] leading-relaxed text-[#b6becb] sm:mb-[32px] sm:text-[17px] md:text-lg [animation-delay:.42s]">
+            Shop tested laptops, MacBooks, iPhones and accessories
+            <span className="hidden sm:inline"> with transparent grading, warranty cover and nationwide delivery</span>.
           </p>
           <div className="flex animate-rise flex-wrap gap-3.5 [animation-delay:.54s]">
             <Link href="/shop" className="btn btn-primary">
@@ -61,14 +68,16 @@ export function Hero({ products = [] }: { products?: Product[] }) {
               How grading works
             </Link>
           </div>
-          <div className="mt-10 grid max-w-[560px] animate-rise grid-cols-2 gap-x-7 gap-y-6 border-t border-white/10 pt-7 sm:grid-cols-3 [animation-delay:.66s]">
-            <Stat n="3-Mo" l="Warranty on refurb" />
-            <Stat n="100%" l="Tested & inspected" highlight />
-            <Stat n="3–5d" l="Nationwide shipping" />
+          {/* Three across at every size — wrapping to a 2+1 grid on phones ate a
+              chunk of the fold for information nobody scrolls back up to read. */}
+          <div className="mt-8 grid max-w-[560px] animate-rise grid-cols-3 gap-x-3 border-t border-white/10 pt-5 sm:mt-10 sm:gap-x-7 sm:pt-7 [animation-delay:.66s]">
+            <Stat n="3-Mo" l="Warranty" sub="on refurb" />
+            <Stat n="100%" l="Tested" sub="& inspected" highlight />
+            <Stat n="3–5d" l="Delivery" sub="nationwide" />
           </div>
         </div>
 
-        <div className="relative animate-rise [animation-delay:.35s]">
+        <div className="relative min-w-0 animate-rise [animation-delay:.35s]">
           <div
             className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0b0f18] p-5 shadow-[0_34px_80px_-42px_rgba(0,148,255,.65),inset_0_1px_0_rgba(255,255,255,.08)] sm:p-6"
           >
@@ -168,11 +177,15 @@ export function Hero({ products = [] }: { products?: Product[] }) {
   );
 }
 
-function Stat({ n, l, highlight }: { n: string; l: string; highlight?: boolean }) {
+function Stat({ n, l, sub, highlight }: { n: string; l: string; sub: string; highlight?: boolean }) {
   return (
     <div>
-      <div className={`font-display text-[27px] font-bold leading-none ${highlight ? "text-volt" : "text-white"}`}>{n}</div>
-      <div className="mt-1.5 text-[12.5px] tracking-[0.3px] text-[#7c8696]">{l}</div>
+      <div className={`font-display text-[19px] font-bold leading-none sm:text-[27px] ${highlight ? "text-volt" : "text-white"}`}>{n}</div>
+      <div className="mt-1.5 text-[11px] leading-tight tracking-[0.3px] text-[#7c8696] sm:text-[12.5px]">
+        {l}
+        {/* The qualifier is nice-to-have context, not the point — drop it on phones. */}
+        <span className="hidden sm:inline"> {sub}</span>
+      </div>
     </div>
   );
 }

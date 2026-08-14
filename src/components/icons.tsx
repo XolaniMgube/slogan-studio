@@ -67,6 +67,18 @@ export const CheckIcon = ({ className }: IconProps) => (
   </svg>
 );
 
+export const StarIcon = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={className}>
+    <path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5L2.6 9.4l6.5-.9z" />
+  </svg>
+);
+
+export const QuoteIcon = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" className={className}>
+    <path d="M9.5 5C6.5 6.5 4.8 9.2 4.8 12.6c0 3.4 2 5.6 4.6 5.6 2.2 0 3.9-1.6 3.9-3.7 0-2-1.4-3.5-3.3-3.5-.4 0-.8.1-1 .2.4-1.6 1.8-3.1 3.6-4L9.5 5zm9 0c-3 1.5-4.7 4.2-4.7 7.6 0 3.4 2 5.6 4.6 5.6 2.2 0 3.9-1.6 3.9-3.7 0-2-1.4-3.5-3.3-3.5-.4 0-.8.1-1 .2.4-1.6 1.8-3.1 3.6-4L18.5 5z" />
+  </svg>
+);
+
 export const LockIcon = ({ className }: IconProps) => (
   <svg viewBox="0 0 24 24" className={`${base} ${className ?? ""}`} strokeWidth={1.8}>
     <rect x="4" y="10" width="16" height="10" rx="2" />

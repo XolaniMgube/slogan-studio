@@ -1,5 +1,6 @@
 import { Hero } from "@/components/hero";
 import { Featured } from "@/components/featured";
+import { Reviews } from "@/components/reviews";
 import { WhySection, PromoSection } from "@/components/sections";
 import { getStoreProducts } from "@/lib/products-db";
 import { CatalogueUnavailable } from "@/components/catalogue-unavailable";
@@ -38,6 +39,9 @@ export default async function HomePage() {
       ) : (
         <Featured products={featured} />
       )}
+      {/* Social proof sits directly after the products — the visitor has just seen
+          what's on offer, which is when other people's experience carries most weight. */}
+      <Reviews />
       <WhySection />
       <PromoSection />
     </>

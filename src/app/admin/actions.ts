@@ -5,8 +5,10 @@ import { redirect } from "next/navigation";
 import { clearAdminSession, createAdminSession, requireAdmin, verifyPassword } from "@/lib/admin-auth";
 import { createSupabaseAdminClient, isSupabaseAdminConfigured } from "@/lib/supabase/server";
 import { OrderStatus, PaymentStatus, ProductGrade, ProductStatus } from "@/lib/database.types";
-import { restoreOrderStock } from "@/lib/orders-db";
-import { getImageFiles, uploadProductImages } from "@/lib/product-images";
+import { getUnresolvedOrdersForProduct, restoreOrderStock } from "@/lib/orders-db";
+import { deleteProductImages, getImageFiles, uploadProductImages } from "@/lib/product-images";
+import { MAX_PRODUCTS, countProducts } from "@/lib/products-db";
+import { slugify } from "@/lib/utils";
 
 export async function loginAdmin(_: { error?: string } | undefined, formData: FormData) {
   const password = String(formData.get("password") ?? "");
@@ -27,7 +29,19 @@ export async function saveProductAction(formData: FormData) {
   if (!isSupabaseAdminConfigured()) throw new Error("Supabase admin credentials are not configured.");
 
   const id = String(formData.get("id") ?? "");
-  const slug = String(formData.get("slug") ?? "").trim();
+
+  /* Cap the catalogue — checked BEFORE the image upload below, so a rejected
+     product doesn't leave orphaned files in storage. Only applies to new
+     products; editing an existing one is always allowed. */
+  if (!id && (await countProducts()) >= MAX_PRODUCTS) {
+    throw new Error(`Product limit reached (${MAX_PRODUCTS}). Delete a product before adding another.`);
+  }
+
+  /* Always normalise — the field is free text, and a slug with spaces or capitals
+     produces a URL that no longer matches the stored value, 404ing a live product.
+     Falls back to the product name if the slug field was left blank. */
+  const rawSlug = String(formData.get("slug") ?? "").trim();
+  const slug = slugify(rawSlug) || slugify(String(formData.get("name") ?? ""));
   const name = String(formData.get("name") ?? "").trim();
   const category = String(formData.get("category") ?? "").trim();
   const price = Number(formData.get("price") ?? 0);
@@ -73,6 +87,59 @@ export async function saveProductAction(formData: FormData) {
   revalidatePath("/shop");
   revalidatePath("/admin/products");
   redirect("/admin/products");
+}
+
+/**
+ * Permanently removes a product and its uploaded images.
+ *
+ * Past orders are unaffected: order_items stores the product name, slug, grade
+ * and price at time of sale, and its product_id is ON DELETE SET NULL — so order
+ * history still reads correctly, it just no longer links to a live product.
+ */
+export interface DeleteProductState {
+  error?: string;
+}
+
+export async function deleteProductAction(_prev: DeleteProductState | undefined, formData: FormData): Promise<DeleteProductState> {
+  await requireAdmin();
+  if (!isSupabaseAdminConfigured()) return { error: "Supabase admin credentials are not configured." };
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { error: "Missing product id." };
+
+  /* Refuse while the product is on an order that isn't finished. Deleting it
+     would null the product_id on that order line, and the stock functions skip
+     null lines — so you'd be shipping something the system can no longer track. */
+  const blocking = await getUnresolvedOrdersForProduct(id);
+  if (blocking.length) {
+    const list = blocking
+      .slice(0, 3)
+      .map((o) => `${o.order_number} (${o.status.replaceAll("_", " ")})`)
+      .join(", ");
+    const more = blocking.length > 3 ? ` and ${blocking.length - 3} more` : "";
+    return {
+      error: `Can't delete — this product is on ${blocking.length} unfinished ${
+        blocking.length === 1 ? "order" : "orders"
+      }: ${list}${more}. Complete or cancel ${blocking.length === 1 ? "it" : "them"} first, or set the product to archived to hide it from the shop.`,
+    };
+  }
+
+  const supabase = createSupabaseAdminClient();
+
+  // Read the image list first — once the row is gone we can't find the files.
+  const { data: product, error: readError } = await supabase.from("products").select("images").eq("id", id).maybeSingle();
+  if (readError) return { error: readError.message };
+
+  const { error } = await supabase.from("products").delete().eq("id", id);
+  if (error) return { error: error.message };
+
+  await deleteProductImages(product?.images ?? []);
+
+  revalidatePath("/");
+  revalidatePath("/shop");
+  revalidatePath("/admin");
+  revalidatePath("/admin/products");
+  return {};
 }
 
 export async function updateOrderStatusAction(formData: FormData) {
