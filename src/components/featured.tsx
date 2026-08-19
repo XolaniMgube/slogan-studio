@@ -7,7 +7,7 @@ import { ProductCard } from "./product-card";
 import { ArrowIcon } from "./icons";
 import { cn } from "@/lib/utils";
 
-const CHIPS: (Category | "All")[] = ["All", "Laptops", "MacBooks", "iPhones", "Headsets", "Keyboards", "Mice", "AirPods", "Phone Cases"];
+const CHIPS: (Category | "All")[] = ["All", "Laptops", "MacBooks", "iPhones", "Headsets", "Keyboards", "Mouse", "AirPods", "Phone Cases"];
 
 export function Featured({ products }: { products: Product[] }) {
   const [active, setActive] = useState<Category | "All">("All");

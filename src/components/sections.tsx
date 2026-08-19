@@ -1,12 +1,12 @@
+import Image from "next/image";
 import Link from "next/link";
-import { Grade } from "@/lib/types";
 import { GRADE_LABEL, GRADE_BLURB } from "@/lib/types";
-import { ArrowIcon, WrenchIcon } from "./icons";
+import { ArrowIcon } from "./icons";
 import { Reveal } from "./reveal";
 
-const GRADES: Grade[] = ["A", "B", "C"];
-const SWATCH: Record<Grade, string> = { A: "bg-grade-a text-grade-a", B: "bg-grade-b text-grade-b", C: "bg-grade-c text-grade-c" };
-const TAGTEXT: Record<Grade, string> = { A: "text-grade-a", B: "text-grade-b", C: "text-[#aeb8c6]" };
+const GRADES = ["A", "B", "C"] as const;
+const SWATCH = { A: "bg-grade-a text-grade-a", B: "bg-grade-b text-grade-b", C: "bg-grade-c text-grade-c" } as const;
+const TAGTEXT = { A: "text-grade-a", B: "text-grade-b", C: "text-[#aeb8c6]" } as const;
 
 export function WhySection() {
   return (
@@ -64,8 +64,8 @@ export function WhySection() {
 export function PromoSection() {
   return (
     <section className="relative overflow-hidden bg-paper-2 text-ink">
-      <div className="wrap">
-        <Reveal className="relative z-[3] max-w-[560px] py-16 md:py-20">
+      <div className="wrap grid items-center gap-10 py-16 md:grid-cols-[1fr_.72fr] md:py-20 lg:gap-16">
+        <Reveal className="relative z-[3] max-w-[560px]">
           <span className="mb-3.5 inline-flex items-center gap-2.5 font-display text-xs font-semibold uppercase tracking-[2px] text-volt before:h-0.5 before:w-6 before:bg-volt">
             Beyond the store
           </span>
@@ -91,25 +91,16 @@ export function PromoSection() {
             <ArrowIcon className="h-4 w-4 stroke-white" />
           </Link>
         </Reveal>
-      </div>
 
-      <div
-        className="absolute bottom-10 right-0 top-10 hidden w-[38%] overflow-hidden rounded-l-2xl bg-ink md:block"
-      >
-        <div
-          className="absolute inset-0 opacity-40"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px)",
-            backgroundSize: "40px 40px",
-          }}
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_65%_50%,rgba(0,148,255,.35),transparent_60%)] blur-[30px]" />
-        <div
-          className="absolute left-[58%] top-1/2 grid h-[120px] w-[120px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-2xl border-2 border-volt shadow-[0_0_50px_rgba(0,148,255,.35)]"
-        >
-          <WrenchIcon className="h-[54px] w-[54px] stroke-volt" />
-        </div>
+        <Reveal className="relative aspect-[4/3] overflow-hidden rounded-2xl shadow-xl">
+          <Image
+            src="/beyong-the-store.png"
+            alt="Slogan Studio services beyond the online store"
+            fill
+            sizes="(max-width: 768px) 100vw, 42vw"
+            className="object-cover"
+          />
+        </Reveal>
       </div>
     </section>
   );

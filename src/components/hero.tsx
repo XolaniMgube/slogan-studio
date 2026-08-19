@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Product } from "@/lib/types";
+import { GRADE_NAME, Product } from "@/lib/types";
 import { formatRand } from "@/lib/utils";
 import { ArrowIcon } from "./icons";
 
@@ -132,7 +132,7 @@ export function Hero({ products = [] }: { products?: Product[] }) {
                             <div>
                               <p className="font-display text-xl font-bold text-white">{product.name}</p>
                               <p className="mt-1 text-sm text-[#b6becb]">
-                                Grade {product.grade} · {product.spec}
+                                {GRADE_NAME[product.grade]} · {product.spec}
                               </p>
                             </div>
                             <p className="font-display text-2xl font-bold text-volt">{formatRand(product.price)}</p>

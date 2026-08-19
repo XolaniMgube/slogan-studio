@@ -46,14 +46,23 @@ export function Header() {
           })}
         </nav>
 
-        <div className="relative ml-auto hidden max-w-[400px] flex-1 md:block xl:max-w-[470px]">
-          <SearchIcon className="absolute left-[14px] top-1/2 h-[17px] w-[17px] -translate-y-1/2 stroke-[#6b7280]" />
+        <form action="/shop" role="search" className="relative ml-auto hidden max-w-[400px] flex-1 md:block xl:max-w-[470px]">
+          <button
+            type="submit"
+            aria-label="Search products"
+            className="absolute left-0 top-0 grid h-11 w-[42px] place-items-center text-[#6b7280] transition hover:text-white"
+          >
+            <SearchIcon className="h-[17px] w-[17px] stroke-current" />
+          </button>
           <input
-            type="text"
+            type="search"
+            name="q"
+            maxLength={100}
+            aria-label="Search products"
             placeholder="Search products..."
             className="h-11 w-full rounded-md border border-white/10 bg-white/[0.045] pl-[42px] pr-4 text-sm text-white outline-none transition placeholder:text-[#8a93a3] focus:border-volt focus:bg-white/[0.07] focus:shadow-[0_0_0_3px_rgba(0,148,255,.22)]"
           />
-        </div>
+        </form>
 
         {/* No account icon: customer logins are out of scope — checkout is guest-only
             and order lookups happen through /track. */}
@@ -84,14 +93,23 @@ export function Header() {
       {mobileOpen && (
         <nav className="border-t border-white/[0.08] bg-ink lg:hidden">
           <div className="wrap flex flex-col py-4">
-            <div className="relative mb-3">
-              <SearchIcon className="absolute left-[14px] top-1/2 h-[17px] w-[17px] -translate-y-1/2 stroke-[#8a93a3]" />
+            <form action="/shop" role="search" onSubmit={() => setMobileOpen(false)} className="relative mb-3">
+              <button
+                type="submit"
+                aria-label="Search products"
+                className="absolute left-0 top-0 grid h-11 w-[42px] place-items-center text-[#8a93a3]"
+              >
+                <SearchIcon className="h-[17px] w-[17px] stroke-current" />
+              </button>
               <input
-                type="text"
+                type="search"
+                name="q"
+                maxLength={100}
+                aria-label="Search products"
                 placeholder="Search products..."
                 className="h-11 w-full rounded-md border border-white/10 bg-white/[0.045] pl-[42px] pr-4 text-sm text-white outline-none placeholder:text-[#8a93a3] focus:border-volt"
               />
-            </div>
+            </form>
             {PAGES.map(([label, href]) => (
               <Link
                 key={href}

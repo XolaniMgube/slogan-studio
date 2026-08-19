@@ -1,3 +1,5 @@
+import type { Grade } from "./types";
+
 /** Format a rand integer as "R12,499". */
 export function formatRand(amount: number): string {
   return "R" + amount.toLocaleString("en-ZA");
@@ -35,7 +37,8 @@ export function safeDecode(value: string): string {
   }
 }
 
-export const GRADE_CLASS: Record<"A" | "B" | "C", string> = {
+export const GRADE_CLASS: Record<Grade, string> = {
+  NEW: "bg-volt",
   A: "bg-grade-a",
   B: "bg-grade-b",
   C: "bg-grade-c",

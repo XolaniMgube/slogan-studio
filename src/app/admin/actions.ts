@@ -8,6 +8,7 @@ import { OrderStatus, PaymentStatus, ProductGrade, ProductStatus } from "@/lib/d
 import { getUnresolvedOrdersForProduct, restoreOrderStock } from "@/lib/orders-db";
 import { deleteProductImages, getImageFiles, uploadProductImages } from "@/lib/product-images";
 import { MAX_PRODUCTS, countProducts } from "@/lib/products-db";
+import { GRADES } from "@/lib/types";
 import { slugify } from "@/lib/utils";
 
 export async function loginAdmin(_: { error?: string } | undefined, formData: FormData) {
@@ -51,6 +52,8 @@ export async function saveProductAction(formData: FormData) {
   const existingImages = lines(formData.get("existingImages")).slice(0, 3);
   const uploadedImages = await uploadProductImages(getImageFiles(formData), slug);
   const images = uploadedImages.length ? uploadedImages : existingImages;
+  const grade = String(formData.get("grade") ?? "A");
+  if (!GRADES.some((validGrade) => validGrade === grade)) throw new Error("Invalid product grade.");
 
   const payload = {
     slug,
@@ -59,7 +62,7 @@ export async function saveProductAction(formData: FormData) {
     category,
     brand: nullableText(formData.get("brand")),
     model: nullableText(formData.get("model")),
-    grade: String(formData.get("grade") ?? "A") as ProductGrade,
+    grade: grade as ProductGrade,
     status: String(formData.get("status") ?? "draft") as ProductStatus,
     price_cents: Math.round(price * 100),
     compare_at_cents: compareAtRaw ? Math.round(Number(compareAtRaw) * 100) : null,

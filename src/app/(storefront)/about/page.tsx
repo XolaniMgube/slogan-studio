@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { PageHero } from "@/components/page-hero";
 import { ImageSlot } from "@/components/image-slot";
@@ -7,35 +8,31 @@ import { WrenchIcon, CheckIcon, ArrowIcon, ShieldIcon, TruckIcon, ChatIcon } fro
 
 /** Merged from the old /about and /services pages. /services redirects to #services. */
 
-const PROCESS = [
-  { step: "01", title: "We source", body: "Devices come in from trade-ins, upgrades and business fleet refreshes — never unknown stock." },
-  { step: "02", title: "We test", body: "Full hardware and software diagnostics: battery health, ports, screen, keyboard, storage, thermals." },
-  { step: "03", title: "We grade", body: "Honest A / B / C grading against a fixed standard, with any cosmetic wear photographed and noted." },
-  { step: "04", title: "We deliver", body: "Packaged carefully, shipped tracked, and backed by the warranty stated on the product." },
-];
-
 const VALUES = [
   { icon: CheckIcon, title: "Honest grading", body: "We describe wear as it is. The grade on the listing is the device you receive." },
   { icon: ShieldIcon, title: "Backed by warranty", body: "Refurbished devices carry cover, with a free diagnostic on any claim." },
-  { icon: TruckIcon, title: "Nationwide reach", body: "Tracked delivery anywhere in South Africa, or collect from us in Vereeniging." },
+  { icon: TruckIcon, title: "Nationwide reach", body: "Tracked delivery anywhere in South Africa, sent securely straight to your door." },
 ];
 
 const SERVICES = [
   {
     title: "Device Repairs",
     slot: "Repair bench / technician at work",
+    image: "/device-repair.png",
     blurb: "Cracked screens, dead batteries, water damage, slow machines — we diagnose and fix laptops, MacBooks and iPhones.",
     points: ["Screen & battery replacement", "Software & OS troubleshooting", "Data recovery & backup", "Free diagnostic quote"],
   },
   {
     title: "IT Support",
     slot: "On-site support / network setup",
+    image: "/it-support.png",
     blurb: "On-call technical support for individuals and small businesses across Gauteng. Setup, security, and the stuff that breaks.",
     points: ["Network & Wi-Fi setup", "Email & account configuration", "Security & antivirus", "Remote & on-site support"],
   },
   {
     title: "Skills Development",
     slot: "Training session / learners",
+    image: "/skills-development.png",
     blurb: "We train the next generation of South African tech talent — practical, work-ready skills for a digital economy.",
     points: ["Hardware & repair basics", "IT fundamentals", "Entry-level certifications", "Youth-focused programmes"],
   },
@@ -91,12 +88,15 @@ export default function AboutPage() {
             </div>
           </Reveal>
 
-          <Reveal className="relative">
-            <ImageSlot label="Team or storefront photo" ratio="aspect-[4/3]" />
-            {/* Offset second image gives the block depth instead of one flat rectangle. */}
-            <div className="absolute -bottom-8 -left-6 hidden w-40 lg:block">
-              <ImageSlot label="Detail shot" ratio="aspect-square" className="border-4 border-white shadow-xl" />
-            </div>
+          <Reveal className="relative aspect-[4/3] overflow-hidden rounded-lg shadow-xl">
+            <Image
+              src="/about.png"
+              alt="The Slogan Studio team"
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover"
+            />
           </Reveal>
         </div>
       </section>
@@ -135,35 +135,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ---------- Process ---------- */}
-      <section className="wrap py-16 md:py-20">
-        <Reveal className="max-w-2xl">
-          <Eyebrow>How it works</Eyebrow>
-          <h2 className="font-display text-[30px] font-bold leading-[1.1] tracking-[-0.8px] md:text-[36px]">
-            From trade-in to your desk
-          </h2>
-          <p className="mt-3 text-[15px] leading-relaxed text-muted">
-            Every device follows the same route before it reaches a listing. No shortcuts, no unknown stock.
-          </p>
-        </Reveal>
-
-        <div className="mt-10 grid items-center gap-10 lg:grid-cols-[1.05fr_1fr] lg:gap-14">
-          <Reveal className="grid gap-4 sm:grid-cols-2">
-            {PROCESS.map(({ step, title, body }) => (
-              <div key={step} className="relative rounded-lg border border-hairline bg-white p-6 transition hover:border-volt hover:shadow-volt-sm">
-                <span className="font-display text-[13px] font-bold tracking-[1px] text-volt">{step}</span>
-                <h3 className="mt-2 font-display text-lg font-bold">{title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-muted">{body}</p>
-              </div>
-            ))}
-          </Reveal>
-
-          <Reveal>
-            <ImageSlot label="Testing / workshop photo" ratio="aspect-[3/4]" />
-          </Reveal>
-        </div>
-      </section>
-
       {/* ---------- Services ---------- */}
       <section id="services" className="scroll-mt-24 border-y border-hairline bg-paper-2 py-16 md:py-20">
         <div className="wrap">
@@ -183,7 +154,19 @@ export default function AboutPage() {
                 key={s.title}
                 className="group flex flex-col overflow-hidden rounded-lg border border-hairline bg-white transition hover:-translate-y-1.5 hover:border-volt hover:shadow-volt"
               >
-                <ImageSlot label={s.slot} ratio="aspect-[16/10]" className="rounded-none" />
+                {s.image ? (
+                  <div className="relative aspect-[16/10] overflow-hidden">
+                    <Image
+                      src={s.image}
+                      alt={`${s.title} at Slogan Studio`}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    />
+                  </div>
+                ) : (
+                  <ImageSlot label={s.slot} ratio="aspect-[16/10]" className="rounded-none" />
+                )}
                 <div className="flex flex-1 flex-col p-7">
                   <div
                     className="mb-4 grid h-11 w-11 place-items-center border-2 border-volt"
@@ -251,8 +234,14 @@ export default function AboutPage() {
             </div>
           </Reveal>
 
-          <Reveal>
-            <ImageSlot label="Team or workspace photo" ratio="aspect-[4/3]" className="h-full" />
+          <Reveal className="relative min-h-[320px] overflow-hidden rounded-lg shadow-xl md:min-h-[420px]">
+            <Image
+              src="/contact.png"
+              alt="Contact the Slogan Studio team"
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover"
+            />
           </Reveal>
         </div>
       </section>

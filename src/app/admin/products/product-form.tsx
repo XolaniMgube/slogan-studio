@@ -1,10 +1,9 @@
-import { CATEGORIES } from "@/lib/types";
+import { CATEGORIES, GRADES, GRADE_NAME } from "@/lib/types";
 import { AdminProduct } from "@/lib/products-db";
 import { SubmitButton } from "@/components/submit-button";
 import { saveProductAction } from "../actions";
 
 const statuses = ["draft", "active", "sold_out", "archived"] as const;
-const grades = ["A", "B", "C"] as const;
 
 export function ProductForm({ product, disabled = false }: { product?: AdminProduct; disabled?: boolean }) {
   return (
@@ -36,9 +35,9 @@ export function ProductForm({ product, disabled = false }: { product?: AdminProd
         <label className="grid gap-1.5">
           <span className="font-display text-sm font-semibold">Grade</span>
           <select name="grade" defaultValue={product?.grade ?? "A"} disabled={disabled} className="input">
-            {grades.map((grade) => (
+            {GRADES.map((grade) => (
               <option key={grade} value={grade}>
-                Grade {grade}
+                {GRADE_NAME[grade]}
               </option>
             ))}
           </select>
