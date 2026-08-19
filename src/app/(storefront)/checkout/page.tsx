@@ -11,7 +11,7 @@ import { ArrowIcon, LockIcon, ShieldIcon, TruckIcon, ChatIcon, CheckIcon } from 
 import { AddressAutocomplete, ResolvedAddress, isAddressAutocompleteEnabled } from "@/components/address-autocomplete";
 import { VALIDATION_MESSAGES, isValidEmail, isValidName, isValidSaMobile, toInternationalPhone } from "@/lib/validation";
 
-const WHATSAPP = "https://wa.me/27739812427";
+const WHATSAPP = "https://wa.me/27739098254";
 
 export default function CheckoutPage() {
   return (
@@ -284,7 +284,7 @@ function CheckoutInner() {
 
           <a href={WHATSAPP} className="flex items-center justify-center gap-2 rounded-lg border border-hairline bg-white px-4 py-3 text-sm font-semibold transition hover:border-volt hover:text-volt">
             <ChatIcon className="h-4 w-4 stroke-current" />
-            Need help? WhatsApp 073 981 2427
+            Need help? WhatsApp 073 909 8254
           </a>
         </aside>
       </div>

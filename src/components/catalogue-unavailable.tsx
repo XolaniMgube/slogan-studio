@@ -24,8 +24,8 @@ export function CatalogueUnavailable({ compact = false, onRetry }: { compact?: b
             Try again
           </button>
         )}
-        <a href="https://wa.me/27739812427" className={onRetry ? "btn btn-ghost" : "btn btn-primary"}>
-          WhatsApp 073 981 2427
+        <a href="https://wa.me/27739098254" className={onRetry ? "btn btn-ghost" : "btn btn-primary"}>
+          WhatsApp 073 909 8254
         </a>
         <Link href="/" className="btn btn-ghost">
           Back home

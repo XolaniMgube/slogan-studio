@@ -264,9 +264,9 @@ export default function WarrantyShippingPage() {
             Ask us before you buy — we&apos;d rather help you pick the right device than sell you the wrong one.
           </p>
           <div className="mt-2 flex flex-wrap justify-center gap-3">
-            <a href="https://wa.me/27739812427" className="btn btn-primary">
+            <a href="https://wa.me/27739098254" className="btn btn-primary">
               <ChatIcon className="h-4 w-4 stroke-white" />
-              <span>WhatsApp 073 981 2427</span>
+              <span>WhatsApp 073 909 8254</span>
             </a>
             <Link href="/track" className="btn btn-ghost">
               Track an existing order

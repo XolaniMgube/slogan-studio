@@ -31,7 +31,7 @@ export function Reviews() {
             </div>
           </div>
 
-          <a href="https://wa.me/27739812427" className="btn btn-ghost hidden sm:inline-flex">
+          <a href="https://wa.me/27739098254" className="btn btn-ghost hidden sm:inline-flex">
             <ChatIcon className="h-4 w-4 stroke-current" />
             <span>Ask us anything</span>
           </a>
