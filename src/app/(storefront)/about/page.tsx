@@ -207,8 +207,8 @@ export default function AboutPage() {
               <div>
                 <dt className="font-display text-[13px] font-semibold uppercase tracking-[1px] text-muted">WhatsApp</dt>
                 <dd className="mt-1.5 text-[15px] leading-relaxed">
-                  <a href="https://wa.me/27739812427" className="font-semibold text-volt hover:text-ink">
-                    073 981 2427
+                  <a href="https://wa.me/27739098254" className="font-semibold text-volt hover:text-ink">
+                    073 909 8254
                   </a>
                 </dd>
               </div>
@@ -227,7 +227,7 @@ export default function AboutPage() {
               <p className="mt-1.5 text-sm leading-relaxed text-muted">
                 Message us and we&apos;ll come back to you with a free diagnostic and a fair price.
               </p>
-              <a href="https://wa.me/27739812427" className="btn btn-primary mt-5">
+              <a href="https://wa.me/27739098254" className="btn btn-primary mt-5">
                 <ChatIcon className="h-4 w-4 stroke-white" />
                 <span>WhatsApp us</span>
               </a>

@@ -41,8 +41,8 @@ export function Footer() {
 
           <div className="mt-6 md:mt-0">
             <h5 className="mb-3 font-display text-[13px] font-semibold uppercase tracking-[1.5px] sm:mb-[18px]">Get in touch</h5>
-            <a href="https://wa.me/27739812427" className="mb-3 block font-display text-sm font-semibold text-volt transition hover:text-white">
-              WhatsApp 073 981 2427
+            <a href="https://wa.me/27739098254" className="mb-3 block font-display text-sm font-semibold text-volt transition hover:text-white">
+              WhatsApp 073 909 8254
             </a>
             <a href="mailto:info@sloganstudio.co.za" className="block text-sm text-[#8a93a3] transition hover:text-volt">
               info@sloganstudio.co.za
