@@ -4,6 +4,7 @@ import { calculateShipping } from "@/lib/shop-config";
 import { CheckoutCustomer, createOrderNumber, createPendingOrder } from "@/lib/orders-db";
 import { getProductBySlug } from "@/lib/products-db";
 import { VALIDATION_MESSAGES, isValidEmail, isValidName, isValidSaMobile, toInternationalPhone } from "@/lib/validation";
+import { Grade } from "@/lib/types";
 
 interface CheckoutItemInput {
   id: string;
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Re-price every item from the database — never trust client-submitted prices/names.
-  let resolvedItems: { id: string; slug: string; name: string; price: number; grade: "A" | "B" | "C"; image: string; qty: number }[];
+  let resolvedItems: { id: string; slug: string; name: string; price: number; grade: Grade; image: string; qty: number }[];
   try {
     resolvedItems = await Promise.all(
       body.items.map(async (item) => {

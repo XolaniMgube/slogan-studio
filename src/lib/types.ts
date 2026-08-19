@@ -1,4 +1,13 @@
-export type Grade = "A" | "B" | "C";
+export type Grade = "NEW" | "A" | "B" | "C";
+
+export const GRADES: Grade[] = ["NEW", "A", "B", "C"];
+
+export const GRADE_NAME: Record<Grade, string> = {
+  NEW: "Brand New",
+  A: "Grade A",
+  B: "Grade B",
+  C: "Grade C",
+};
 
 export type Category =
   | "Laptops"
@@ -6,7 +15,8 @@ export type Category =
   | "iPhones"
   | "Headsets"
   | "Keyboards"
-  | "Mice"
+  | "Mouse"
+  | "Laptop Stand"
   | "AirPods"
   | "Phone Cases"
   | "Chargers"
@@ -20,7 +30,8 @@ export const CATEGORIES: Category[] = [
   "iPhones",
   "Headsets",
   "Keyboards",
-  "Mice",
+  "Mouse",
+  "Laptop Stand",
   "AirPods",
   "Phone Cases",
   "Chargers",
@@ -50,12 +61,14 @@ export interface Product {
 }
 
 export const GRADE_LABEL: Record<Grade, string> = {
+  NEW: "Unused",
   A: "Like new",
   B: "Light wear",
   C: "Honest value",
 };
 
 export const GRADE_BLURB: Record<Grade, string> = {
+  NEW: "Unused and sold in brand-new condition. Any included accessories and warranty are listed on the product page.",
   A: "Minimal to no signs of use. Fully functional, cosmetically near-flawless — the closest you'll get to brand new without the price.",
   B: "Light cosmetic marks from normal use. Works perfectly, just gently used — the sweet spot for value.",
   C: "Visible wear, fully functional. For the buyer who cares about performance and price over looks.",

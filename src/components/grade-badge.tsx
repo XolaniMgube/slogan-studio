@@ -1,4 +1,4 @@
-import { Grade } from "@/lib/types";
+import { Grade, GRADE_NAME } from "@/lib/types";
 import { GRADE_CLASS, cn } from "@/lib/utils";
 
 export function GradeBadge({ grade, className }: { grade: Grade; className?: string }) {
@@ -11,7 +11,7 @@ export function GradeBadge({ grade, className }: { grade: Grade; className?: str
       )}
       style={{ clipPath: "polygon(0 0, 100% 0, calc(100% - 7px) 100%, 0 100%)", padding: "4px 11px 4px 13px" }}
     >
-      Grade {grade}
+      {GRADE_NAME[grade]}
     </span>
   );
 }

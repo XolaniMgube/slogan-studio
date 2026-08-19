@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProductBySlug, getRelatedProducts } from "@/lib/products-db";
-import { GRADE_LABEL, GRADE_BLURB } from "@/lib/types";
-import { formatRand, safeDecode } from "@/lib/utils";
+import { GRADE_LABEL, GRADE_BLURB, GRADE_NAME } from "@/lib/types";
+import { GRADE_CLASS, cn, formatRand, safeDecode } from "@/lib/utils";
 import { ProductGallery } from "@/components/product-gallery";
 import { AddToCart } from "@/components/add-to-cart";
 import { ProductCard } from "@/components/product-card";
@@ -62,10 +62,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <div className="mt-5 flex items-center gap-2 border-y border-hairline py-4">
             <div className="flex items-center gap-2">
               <span
-                className={`h-3.5 w-3.5 ${product.grade === "A" ? "bg-grade-a" : product.grade === "B" ? "bg-grade-b" : "bg-grade-c"}`}
+                className={cn("h-3.5 w-3.5", GRADE_CLASS[product.grade])}
                 style={{ clipPath: "polygon(0 0,100% 0,68% 100%,0 100%)" }}
               />
-              <span className="font-display text-sm font-semibold">Grade {product.grade} — {GRADE_LABEL[product.grade]}</span>
+              <span className="font-display text-sm font-semibold">{GRADE_NAME[product.grade]} — {GRADE_LABEL[product.grade]}</span>
             </div>
             <span className="text-sm text-muted">·</span>
             <span className="text-sm text-muted">{product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}</span>

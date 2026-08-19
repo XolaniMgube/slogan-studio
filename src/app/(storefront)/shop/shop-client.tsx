@@ -1,14 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ProductCard } from "@/components/product-card";
-import { CATEGORIES, Category, Grade, Product } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { CATEGORIES, GRADES, GRADE_NAME, Category, Grade, Product } from "@/lib/types";
+import { GRADE_CLASS, cn } from "@/lib/utils";
 
 export function ShopClient({ products }: { products: Product[] }) {
   const params = useSearchParams();
+  const router = useRouter();
   const initialCat = (params.get("category") as Category | null) ?? "All";
+  const query = params.get("q")?.trim().toLocaleLowerCase() ?? "";
 
   const [category, setCategory] = useState<Category | "All">(initialCat);
   const [grades, setGrades] = useState<Set<Grade>>(new Set());
@@ -19,13 +21,27 @@ export function ShopClient({ products }: { products: Product[] }) {
      so you had to scroll past all of it before seeing a single product. */
   const [filtersOpen, setFiltersOpen] = useState(false);
 
+  // A header search can happen while the customer is already on /shop. Reset
+  // any locally selected category so it cannot silently hide valid results.
+  useEffect(() => {
+    if (query) setCategory("All");
+  }, [query]);
+
   const filtered = useMemo(() => {
     let list = category === "All" ? products : products.filter((p) => p.category === category);
+    if (query) {
+      list = list.filter((product) =>
+        [product.name, product.category, GRADE_NAME[product.grade], product.spec, product.description, ...product.specs]
+          .join(" ")
+          .toLocaleLowerCase()
+          .includes(query)
+      );
+    }
     if (grades.size) list = list.filter((p) => grades.has(p.grade));
     if (sort === "low") list = [...list].sort((a, b) => a.price - b.price);
     if (sort === "high") list = [...list].sort((a, b) => b.price - a.price);
     return list;
-  }, [products, category, grades, sort]);
+  }, [products, category, grades, query, sort]);
 
   const toggleGrade = (g: Grade) =>
     setGrades((prev) => {
@@ -34,11 +50,12 @@ export function ShopClient({ products }: { products: Product[] }) {
       return next;
     });
 
-  const activeCount = (category === "All" ? 0 : 1) + grades.size;
+  const activeCount = (category === "All" ? 0 : 1) + grades.size + (query ? 1 : 0);
 
   const clearAll = () => {
     setCategory("All");
     setGrades(new Set());
+    router.replace("/shop");
   };
 
   return (
@@ -47,7 +64,9 @@ export function ShopClient({ products }: { products: Product[] }) {
         <span className="mb-2 inline-flex items-center gap-2.5 font-display text-xs font-semibold uppercase tracking-[2.5px] text-volt before:h-0.5 before:w-6 before:bg-volt sm:mb-3">
           Shop
         </span>
-        <h1 className="font-display text-[28px] font-bold tracking-[-1px] sm:text-4xl">All Products</h1>
+        <h1 className="font-display text-[28px] font-bold tracking-[-1px] sm:text-4xl">
+          {query ? `Search results for “${params.get("q")?.trim()}”` : "All Products"}
+        </h1>
         <p className="mt-1.5 text-sm text-muted sm:mt-2 sm:text-[15px]">
           {filtered.length} {filtered.length === 1 ? "item" : "items"} · every device tested, inspected and graded.
         </p>
@@ -121,11 +140,11 @@ export function ShopClient({ products }: { products: Product[] }) {
           <div className="rounded-lg border border-hairline bg-paper-2 p-4 md:border-0 md:bg-transparent md:p-0">
             <h3 className="mb-3 font-display text-sm font-semibold uppercase tracking-[1px]">Condition</h3>
             <div className="flex flex-wrap gap-4 md:flex-col md:gap-2">
-              {(["A", "B", "C"] as Grade[]).map((g) => (
+              {GRADES.map((g) => (
                 <label key={g} className="flex cursor-pointer items-center gap-2.5 text-sm">
                   <input type="checkbox" checked={grades.has(g)} onChange={() => toggleGrade(g)} className="accent-volt" />
-                  <span className={cn("h-3 w-3", g === "A" ? "bg-grade-a" : g === "B" ? "bg-grade-b" : "bg-grade-c")} />
-                  Grade {g}
+                  <span className={cn("h-3 w-3", GRADE_CLASS[g])} />
+                  {GRADE_NAME[g]}
                 </label>
               ))}
             </div>
@@ -156,7 +175,7 @@ export function ShopClient({ products }: { products: Product[] }) {
           ) : (
             <div className="grid place-items-center rounded-lg border border-dashed border-hairline py-16 text-center sm:py-24">
               <p className="font-display text-lg font-semibold">No matches</p>
-              <p className="mt-1 text-sm text-muted">Try clearing a filter to see more.</p>
+              <p className="mt-1 text-sm text-muted">Try a different search or clear the active filters.</p>
               {activeCount > 0 && (
                 <button onClick={clearAll} className="btn btn-ghost mt-4">
                   Clear filters

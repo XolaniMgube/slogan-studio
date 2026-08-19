@@ -13,6 +13,10 @@
     @apply bg-paper text-ink font-body antialiased;
     overflow-x: hidden;
   }
+  html.product-navigation-pending,
+  html.product-navigation-pending * {
+    cursor: progress !important;
+  }
   ::selection {
     @apply bg-volt text-white;
   }

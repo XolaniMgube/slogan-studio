@@ -1,22 +1,22 @@
+import Image from "next/image";
 import Link from "next/link";
 import { PageHero } from "@/components/page-hero";
-import { ImageSlot } from "@/components/image-slot";
 import { Eyebrow } from "@/components/eyebrow";
 import { Reveal } from "@/components/reveal";
-import { Grade, GRADE_LABEL, GRADE_BLURB } from "@/lib/types";
+import { GRADE_LABEL, GRADE_BLURB } from "@/lib/types";
 import { formatRand } from "@/lib/utils";
 import { SHIPPING_FLAT, FREE_SHIPPING_THRESHOLD } from "@/lib/shop-config";
 import { ArrowIcon, CheckIcon, CloseIcon, ShieldIcon, TruckIcon, ChatIcon } from "@/components/icons";
 
 /** Merged from the old /warranty and /shipping pages. Both old URLs redirect here. */
 
-const GRADES: Grade[] = ["A", "B", "C"];
+const GRADES = ["A", "B", "C"] as const;
 
-const GRADE_STYLE: Record<Grade, { dot: string; text: string; ring: string; slot: string }> = {
+const GRADE_STYLE = {
   A: { dot: "bg-grade-a", text: "text-grade-a", ring: "hover:border-grade-a", slot: "Grade A device — example condition" },
   B: { dot: "bg-grade-b", text: "text-grade-b", ring: "hover:border-grade-b", slot: "Grade B device — example wear" },
   C: { dot: "bg-grade-c", text: "text-grade-c", ring: "hover:border-grade-c", slot: "Grade C device — example wear" },
-};
+} as const;
 
 const COVERED = [
   "Warranty on refurbished devices, as stated on each product",
@@ -42,7 +42,7 @@ const DELIVERY_STEPS = [
 const FAQS = [
   {
     q: "How do I know what condition I'm getting?",
-    a: "Every listing shows a grade — A, B or C — measured against the same fixed standard. Any cosmetic wear is noted on the product page, so the grade you see is the device you receive.",
+    a: "Every refurbished listing shows a grade — A, B or C — measured against the same fixed standard. Brand-new products are clearly labelled, and any cosmetic wear on refurbished products is noted on the product page.",
   },
   {
     q: "What happens if something goes wrong after delivery?",
@@ -51,10 +51,6 @@ const FAQS = [
   {
     q: "Do you deliver outside the major centres?",
     a: "Yes. If you're somewhere a courier struggles to reach, get in touch before ordering and we'll confirm what's possible for your area.",
-  },
-  {
-    q: "Can I collect instead of paying for delivery?",
-    a: "You can. Local collection is available from us in Vereeniging — message us to arrange a time, and you're welcome to inspect the device before taking it.",
   },
   {
     q: "My address isn't coming up at checkout. What now?",
@@ -100,7 +96,15 @@ export default function WarrantyShippingPage() {
                 key={g}
                 className={`flex flex-col overflow-hidden rounded-lg border border-hairline bg-white transition hover:-translate-y-1.5 hover:shadow-volt-sm ${style.ring}`}
               >
-                <ImageSlot label={style.slot} ratio="aspect-[16/10]" className="rounded-none" />
+                <div className="relative aspect-[16/10] overflow-hidden">
+                  <Image
+                    src={`/grade-${g}.png`}
+                    alt={style.slot}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    className="object-cover transition-transform duration-500 hover:scale-[1.03]"
+                  />
+                </div>
                 <div className="flex flex-1 flex-col p-7">
                   <div className="mb-3 flex items-center justify-between">
                     <div className={`inline-flex items-center gap-2.5 font-display text-sm font-bold ${style.text}`}>
@@ -190,7 +194,7 @@ export default function WarrantyShippingPage() {
           </h2>
         </Reveal>
 
-        <Reveal className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Reveal className="mt-10 grid gap-4 md:grid-cols-3">
           <Highlight
             icon={<TruckIcon className="h-5 w-5 stroke-volt" />}
             title="Delivery cost"
@@ -198,12 +202,19 @@ export default function WarrantyShippingPage() {
           />
           <Highlight icon={<ArrowIcon className="h-5 w-5 stroke-volt" />} title="Delivery time" body="3–5 working days once your order is confirmed and paid." />
           <Highlight icon={<ShieldIcon className="h-5 w-5 stroke-volt" />} title="Tracking" body="A tracking reference lands in your inbox the moment it ships." />
-          <Highlight icon={<ChatIcon className="h-5 w-5 stroke-volt" />} title="Collection" body="Collect from us in Vereeniging — message us to arrange." />
         </Reveal>
 
         <div className="mt-12 grid items-center gap-10 lg:grid-cols-[1fr_1.05fr] lg:gap-14">
           <Reveal>
-            <ImageSlot label="Packaging / parcel photo" ratio="aspect-[4/3]" />
+            <div className="relative aspect-[4/3] overflow-hidden rounded-lg shadow-xl">
+              <Image
+                src="/packaging.png"
+                alt="A product packaged securely for delivery"
+                fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover"
+              />
+            </div>
           </Reveal>
 
           <Reveal className="grid gap-4 sm:grid-cols-2">

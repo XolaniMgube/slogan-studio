@@ -1,6 +1,6 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
-export type ProductGrade = "A" | "B" | "C";
+export type ProductGrade = "NEW" | "A" | "B" | "C";
 export type ProductStatus = "draft" | "active" | "sold_out" | "archived";
 export type OrderStatus = "pending_payment" | "paid" | "processing" | "ready_to_ship" | "shipped" | "delivered" | "cancelled" | "refunded";
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
